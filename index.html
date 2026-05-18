@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conecta Barrio</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#f3f6fb;
+color:#222;
+}
+
+header{
+background:linear-gradient(135deg,#1f6fff,#22b573);
+padding:30px;
+color:white;
+text-align:center;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px;
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+margin-bottom:20px;
+}
+
+.stat{
+background:white;
+padding:20px;
+border-radius:16px;
+text-align:center;
+box-shadow:0 4px 14px rgba(0,0,0,.08);
+}
+
+.stat h3{
+font-size:32px;
+color:#22b573;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:18px;
+box-shadow:0 5px 16px rgba(0,0,0,.08);
+}
+
+h2{
+margin-bottom:15px;
+color:#16345c;
+}
+
+input,
+textarea,
+select{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:1px solid #ccc;
+border-radius:10px;
+}
+
+button{
+margin-top:15px;
+padding:14px;
+border:none;
+border-radius:12px;
+background:#1f6fff;
+color:white;
+font-weight:bold;
+cursor:pointer;
+width:100%;
+}
+
+.report{
+padding:15px;
+background:#f7f9fc;
+border-radius:12px;
+margin-top:10px;
+border-left:5px solid #1f6fff;
+}
+
+.status{
+display:inline-block;
+margin-top:10px;
+padding:6px 10px;
+border-radius:999px;
+font-size:13px;
+color:white;
+}
+
+.pending{
+background:#ff9800;
+}
+
+.review{
+background:#1f6fff;
+}
+
+.resolved{
+background:#22b573;
+}
+
+.preview{
+width:100%;
+margin-top:10px;
+border-radius:12px;
+}
+
+#map{
+height:400px;
+border-radius:18px;
+margin-top:20px;
+overflow:hidden;
+box-shadow:0 5px 16px rgba(0,0,0,.08);
+}
+
+footer{
+margin-top:40px;
+background:#0d1d34;
+color:white;
+text-align:center;
+padding:20px;
+}
+
+@media(max-width:900px){
+
+.grid{
+grid-template-columns:1fr;
+}
+
+.stats{
+grid-template-columns:1fr;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<h1>Conecta Barrio</h1>
+
+<p>
+Sociedad de Fomento Barrio Las Heras · Mar del Plata
+</p>
+
+</header>
+
+<div class="container">
+
+<div class="stats">
+
+<div class="stat">
+<h3 id="totalReportes">0</h3>
+<p>Reclamos</p>
+</div>
+
+<div class="stat">
+<h3 id="totalResueltos">0</h3>
+<p>Resueltos</p>
+</div>
+
+<div class="stat">
+<h3 id="totalPendientes">0</h3>
+<p>Pendientes</p>
+</div>
+
+</div>
+
+<div class="grid">
+
+<div class="card">
+
+<h2>Reportar problema</h2>
+
+<input id="titulo" placeholder="Título del problema">
+
+<select id="categoria">
+
+<option>Basura</option>
+<option>Calles</option>
+<option>Iluminación</option>
+<option>Seguridad</option>
+<option>Plazas</option>
+
+</select>
+
+<textarea
+id="descripcion"
+rows="5"
+placeholder="Descripción del problema"
+></textarea>
+
+<input
+id="ubicacion"
+placeholder="Ubicación"
+>
+
+<input
+type="file"
+id="foto"
+>
+
+<button onclick="crearReporte()">
+Enviar reporte
+</button>
+
+</div>
+
+<div class="card">
+
+<h2>Panel de reclamos</h2>
+
+<div id="listaReportes"></div>
+
+</div>
+
+</div>
+
+<div id="map"></div>
+
+</div>
+
+<footer>
+
+<h3>Conecta Barrio</h3>
+
+<p>
+Participación comunitaria · Gestión barrial
+</p>
+
+</footer>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+let reportes = [];
+
+const map = L.map('map').setView([-38.0055,-57.5575],13);
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+maxZoom:19
+}
+).addTo(map);
+
+function actualizarEstadisticas(){
+
+document.getElementById("totalReportes").innerText =
+reportes.length;
+
+document.getElementById("totalResueltos").innerText =
+reportes.filter(r => r.estado === "resolved").length;
+
+document.getElementById("totalPendientes").innerText =
+reportes.filter(r => r.estado === "pending").length;
+
+}
+
+function renderizar(){
+
+const lista =
+document.getElementById("listaReportes");
+
+lista.innerHTML = "";
+
+reportes.forEach((r,index)=>{
+
+lista.innerHTML += `
+
+<div class="report">
+
+<b>${r.titulo}</b>
+
+<br><br>
+
+${r.descripcion}
+
+<br><br>
+
+<b>Categoría:</b>
+${r.categoria}
+
+<br>
+
+<b>Ubicación:</b>
+${r.ubicacion}
+
+<br>
+
+<span class="status ${r.estado}">
+${r.estadoTexto}
+</span>
+
+${r.foto
+? `<img class="preview" src="${r.foto}">`
+: ""}
+
+<button onclick="cambiarEstado(${index})">
+Cambiar estado
+</button>
+
+</div>
+
+`;
+
+});
+
+actualizarEstadisticas();
+
+}
+
+function crearReporte(){
+
+const titulo =
+document.getElementById("titulo").value;
+
+const categoria =
+document.getElementById("categoria").value;
+
+const descripcion =
+document.getElementById("descripcion").value;
+
+const ubicacion =
+document.getElementById("ubicacion").value;
+
+const fotoInput =
+document.getElementById("foto");
+
+if(
+!titulo ||
+!descripcion ||
+!ubicacion
+){
+
+alert("Completá todos los campos");
+
+return;
+
+}
+
+const reader = new FileReader();
+
+reader.onload = function(e){
+
+reportes.push({
+
+titulo,
+categoria,
+descripcion,
+ubicacion,
+
+foto:e.target.result,
+
+estado:"pending",
+
+estadoTexto:"Pendiente"
+
+});
+
+renderizar();
+
+};
+
+if(fotoInput.files[0]){
+
+reader.readAsDataURL(
+fotoInput.files[0]
+);
+
+}else{
+
+reportes.push({
+
+titulo,
+categoria,
+descripcion,
+ubicacion,
+
+foto:null,
+
+estado:"pending",
+
+estadoTexto:"Pendiente"
+
+});
+
+renderizar();
+
+}
+
+document.getElementById("titulo").value = "";
+document.getElementById("descripcion").value = "";
+document.getElementById("ubicacion").value = "";
+document.getElementById("foto").value = "";
+
+}
+
+function cambiarEstado(index){
+
+const estados = [
+
+{
+clase:"pending",
+texto:"Pendiente"
+},
+
+{
+clase:"review",
+texto:"En revisión"
+},
+
+{
+clase:"resolved",
+texto:"Resuelto"
+}
+
+];
+
+let actual = reportes[index];
+
+let actualIndex =
+estados.findIndex(
+e => e.clase === actual.estado
+);
+
+let nuevo =
+estados[(actualIndex + 1) % estados.length];
+
+reportes[index].estado = nuevo.clase;
+
+reportes[index].estadoTexto = nuevo.texto;
+
+renderizar();
+
+}
+
+renderizar();
+
+</script>
+
+</body>
+</html>

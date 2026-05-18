@@ -1,0 +1,28 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #F0F4F8;
+}
+
+.leaflet-container {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #4CAF50 !important;
+  box-shadow: 0 0 0 3px rgba(76,175,80,0.12);
+}
+
+button:hover {
+  opacity: 0.88;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #F0F4F8; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
