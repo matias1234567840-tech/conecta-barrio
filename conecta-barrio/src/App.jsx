@@ -279,19 +279,14 @@ function SeccionAvisos({ usuario, esAdmin }) {
     setTitulo(""); setContenido("")
     cargar()
     // Enviar email a todos los socios
-    const { data: perfiles } = await supabase.from("profiles").select("id")
-    const { data: users } = await supabase.auth.admin.listUsers()
-    if (users?.users) {
-      const emails = users.users.map(u => u.email)
-      await supabase.functions.invoke("enviar-notificacion", {
-        body: {
-          tipo: "aviso",
-          destinatarios: emails,
-          asunto: `📢 Nuevo aviso: ${titulo}`,
-          contenido: `<h3>${titulo}</h3><p>${contenido}</p><p>— ${usuario.nombre}</p>`
-        }
-      })
-    }
+    await supabase.functions.invoke("enviar-notificacion", {
+      body: {
+        tipo: "aviso",
+        destinatarios: [usuario.email],
+        asunto: `📢 Nuevo aviso: ${titulo}`,
+        contenido: `<h3>${titulo}</h3><p>${contenido}</p><p>— ${usuario.nombre}</p>`
+      }
+    })
   }
 
   async function borrarAviso(id) {
