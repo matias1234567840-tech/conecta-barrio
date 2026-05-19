@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet"
 import L from "leaflet"
 import { supabase } from "./supabase"
-
+import html2canvas from "html2canvas"
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   useEffect(() => {
@@ -431,8 +431,16 @@ function SeccionPerfil({ usuario, setUsuario }) {
   const [guardando, setGuardando] = useState(false)
   const [exito, setExito] = useState(false)
   const [verCarnet, setVerCarnet] = useState(false)
+  const carnetRef = useRef(null)
   const isMobile = useIsMobile()
-
+async function descargarCarnet() {
+    if(!carnetRef.current) return
+    const canvas = await html2canvas(carnetRef.current, { scale: 2, useCORS: true })
+    const link = document.createElement("a")
+    link.download = `carnet-${nombre}.png`
+    link.href = canvas.toDataURL()
+    link.click()
+  }
   async function guardar() {
     setGuardando(true)
     const { error } = await supabase.from("profiles").update({ nombre, direccion, dni, foto }).eq("id", usuario.id)
@@ -490,7 +498,7 @@ function SeccionPerfil({ usuario, setUsuario }) {
           <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
           <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Mi carnet</h2>
         </div>
-        <div style={{ background:"linear-gradient(135deg,#0A1628 0%,#1B3A2D 100%)",borderRadius:20,padding:24,boxShadow:"0 8px 32px rgba(0,0,0,0.2)",color:"#fff",maxWidth:360 }}>
+        <div ref={carnetRef} style={{ background:"linear-gradient(135deg,#0A1628 0%,#1B3A2D 100%)",borderRadius:20,padding:24,boxShadow:"0 8px 32px rgba(0,0,0,0.2)",color:"#fff",maxWidth:360 }}>
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20 }}>
             <div>
               <div style={{ fontSize:13,fontWeight:800,letterSpacing:0.5 }}>CONECTA BARRIO</div>
@@ -521,6 +529,7 @@ function SeccionPerfil({ usuario, setUsuario }) {
             <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=Socio:${encodeURIComponent(nombre)}-DNI:${dni||"N/A"}-Barrio Las Heras`} alt="QR" style={{ width:100,height:100 }}/>
           </div>
           <div style={{ textAlign:"center",fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:10 }}>ID: {usuario.id?.slice(0,8).toUpperCase()}</div>
+          <button onClick={descargarCarnet} style={{ width:"100%",marginTop:12,padding:"10px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>⬇️ Descargar carnet</button>
         </div>
       </div>
     </div>
