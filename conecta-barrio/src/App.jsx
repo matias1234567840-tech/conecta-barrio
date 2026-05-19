@@ -422,7 +422,110 @@ function SeccionMensajes({ usuario, esAdmin }) {
     </div>
   )
 }
+// ── PERFIL Y CARNET ───────────────────────────────────────────────────────────
+function SeccionPerfil({ usuario, setUsuario }) {
+  const [nombre, setNombre] = useState(usuario.nombre||"")
+  const [direccion, setDireccion] = useState(usuario.direccion||"")
+  const [dni, setDni] = useState(usuario.dni||"")
+  const [foto, setFoto] = useState(usuario.foto||null)
+  const [guardando, setGuardando] = useState(false)
+  const [exito, setExito] = useState(false)
+  const [verCarnet, setVerCarnet] = useState(false)
+  const isMobile = useIsMobile()
 
+  async function guardar() {
+    setGuardando(true)
+    const { error } = await supabase.from("profiles").update({ nombre, direccion, dni, foto }).eq("id", usuario.id)
+    if (!error) {
+      setUsuario(u => ({ ...u, nombre, direccion, dni, foto }))
+      setExito(true)
+      setTimeout(() => setExito(false), 3000)
+    }
+    setGuardando(false)
+  }
+
+  function handleFoto(e) {
+    const f = e.target.files[0]
+    if (f) {
+      const r = new FileReader()
+      r.onloadend = () => setFoto(r.result)
+      r.readAsDataURL(f)
+    }
+  }
+
+  return (
+    <div className={!isMobile?"grid-2":""} style={{ alignItems:"start" }}>
+      <div style={{ background:"#fff", borderRadius:18, padding:isMobile?14:24, boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+          <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
+          <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Mi perfil</h2>
+        </div>
+        <div style={{ textAlign:"center", marginBottom:20 }}>
+          <div style={{ width:90,height:90,borderRadius:45,background:"#F0F4F8",margin:"0 auto 10px",overflow:"hidden",border:"3px solid #E8ECF0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36 }}>
+            {foto ? <img src={foto} alt="" style={{ width:"100%",height:"100%",objectFit:"cover" }}/> : "👤"}
+          </div>
+          <label style={{ display:"inline-block",padding:"7px 16px",borderRadius:10,border:"1.5px dashed #CBD5E1",cursor:"pointer",color:"#9E9E9E",fontSize:13 }}>
+            📷 Cambiar foto
+            <input type="file" accept="image/*" style={{ display:"none" }} onChange={handleFoto}/>
+          </label>
+        </div>
+        {[
+          {label:"Nombre completo",val:nombre,set:setNombre,ph:"Tu nombre"},
+          {label:"Dirección",val:direccion,set:setDireccion,ph:"Tu dirección en el barrio"},
+          {label:"DNI",val:dni,set:setDni,ph:"Tu número de DNI"},
+        ].map(({label,val,set,ph})=>(
+          <div key={label} style={{ marginBottom:12 }}>
+            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5,letterSpacing:0.5 }}>{label.toUpperCase()}</div>
+            <input value={val} onChange={e=>set(e.target.value)} placeholder={ph} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box" }}/>
+          </div>
+        ))}
+        {exito && <div style={{ background:"#E8F5E9",color:"#2E7D32",padding:"10px 14px",borderRadius:10,fontSize:13,marginBottom:12 }}>✅ Perfil actualizado</div>}
+        <button onClick={guardar} disabled={guardando} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit",opacity:guardando?0.7:1 }}>
+          {guardando?"⏳ Guardando...":"💾 Guardar cambios"}
+        </button>
+      </div>
+
+      <div>
+        <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:14 }}>
+          <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
+          <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Mi carnet</h2>
+        </div>
+        <div style={{ background:"linear-gradient(135deg,#0A1628 0%,#1B3A2D 100%)",borderRadius:20,padding:24,boxShadow:"0 8px 32px rgba(0,0,0,0.2)",color:"#fff",maxWidth:360 }}>
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20 }}>
+            <div>
+              <div style={{ fontSize:13,fontWeight:800,letterSpacing:0.5 }}>CONECTA BARRIO</div>
+              <div style={{ fontSize:10,color:"rgba(255,255,255,0.5)",letterSpacing:1 }}>SOC. DE FOMENTO LAS HERAS</div>
+            </div>
+            <Logo size={40}/>
+          </div>
+          <div style={{ display:"flex",gap:16,alignItems:"center",marginBottom:20 }}>
+            <div style={{ width:70,height:70,borderRadius:35,background:"rgba(255,255,255,0.1)",overflow:"hidden",border:"2px solid rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0 }}>
+              {foto?<img src={foto} alt="" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>:"👤"}
+            </div>
+            <div>
+              <div style={{ fontSize:18,fontWeight:900,lineHeight:1.2 }}>{nombre||"Sin nombre"}</div>
+              <div style={{ fontSize:12,color:"rgba(255,255,255,0.6)",marginTop:4 }}>{usuario.rol==="admin"?"⚙️ Administrador":"👤 Socio"}</div>
+              <div style={{ marginTop:6 }}>
+                <span style={{ fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:usuario.cuota_al_dia?"#2E7D32":"#E65100" }}>
+                  {usuario.cuota_al_dia?"✅ Cuota al día":"⚠️ Cuota atrasada"}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style={{ borderTop:"1px solid rgba(255,255,255,0.1)",paddingTop:14,display:"flex",flexDirection:"column",gap:6 }}>
+            {direccion&&<div style={{ fontSize:12,color:"rgba(255,255,255,0.7)" }}>📍 {direccion}</div>}
+            {dni&&<div style={{ fontSize:12,color:"rgba(255,255,255,0.7)" }}>🪪 DNI: {dni}</div>}
+            {usuario.fecha_registro&&<div style={{ fontSize:12,color:"rgba(255,255,255,0.7)" }}>📅 Socio desde: {usuario.fecha_registro}</div>}
+          </div>
+          <div style={{ marginTop:16,background:"#fff",borderRadius:12,padding:10,display:"flex",justifyContent:"center" }}>
+            <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=Socio:${encodeURIComponent(nombre)}-DNI:${dni||"N/A"}-Barrio Las Heras`} alt="QR" style={{ width:100,height:100 }}/>
+          </div>
+          <div style={{ textAlign:"center",fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:10 }}>ID: {usuario.id?.slice(0,8).toUpperCase()}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
 // ── APP PRINCIPAL ─────────────────────────────────────────────────────────────
 function App() {
   const [usuario, setUsuario] = useState(null)
@@ -490,10 +593,11 @@ function App() {
   const resueltos  = reclamos.filter(r=>r.estado==="resuelto")
   const filtrados  = reclamos.filter(r=>filtro==="todos"?true:r.estado===filtro)
 
-  const navItems = [
+ const navItems = [
     {id:"reclamos",icon:"📋",label:"Reclamos"},
     {id:"mapa",icon:"🗺️",label:"Mapa"},
     {id:"socios",icon:"🪪",label:"Socios",soloAdmin:true},
+    {id:"perfil",icon:"👤",label:"Mi perfil"},
     {id:"avisos",icon:"📢",label:"Avisos"},
     {id:"mensajes",icon:"✉️",label:"Mensajes"},
     {id:"admin",icon:"⚙️",label:"Admin",soloAdmin:true},
@@ -693,6 +797,7 @@ function App() {
           {seccion==="socios"&&esAdmin&&<SeccionSocios usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="avisos"&&<SeccionAvisos usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="mensajes"&&<SeccionMensajes usuario={usuario} esAdmin={esAdmin}/>}
+          {seccion==="perfil"&&<SeccionPerfil usuario={usuario} setUsuario={setUsuario}/>}
 
           {seccion==="admin"&&esAdmin&&(
             <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:22,boxShadow:"0 2px 10px rgba(0,0,0,0.06)" }}>
