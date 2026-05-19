@@ -219,6 +219,10 @@ function SeccionSocios({ usuario, esAdmin }) {
     if(!esAdmin)return
     await supabase.from("profiles").update({rol:rolActual==="admin"?"socio":"admin"}).eq("id",id); cargar()
   }
+  async function eliminarSocio(id) {
+    await supabase.from("profiles").delete().eq("id", id)
+    cargar()
+  }
   const filtrados = socios.filter(s=>s.nombre?.toLowerCase().includes(busqueda.toLowerCase())||s.email?.toLowerCase().includes(busqueda.toLowerCase()))
   const alDia = socios.filter(s=>s.cuota_al_dia)
   const atrasados = socios.filter(s=>!s.cuota_al_dia)
