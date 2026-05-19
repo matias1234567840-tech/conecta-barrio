@@ -455,6 +455,64 @@ function SeccionMensajes({ usuario, esAdmin }) {
     </div>
   )
 }
+// ── CAMPANITA NOTIFICACIONES ──────────────────────────────────────────────────
+function Campanita({ usuario }) {
+  const [notificaciones, setNotificaciones] = useState([])
+  const [abierto, setAbierto] = useState(false)
+
+  useEffect(() => { cargar() }, [])
+
+  async function cargar() {
+    const { data } = await supabase.from("notificaciones").select("*").eq("user_id", usuario.id).order("fecha", { ascending: false })
+    if (data) setNotificaciones(data)
+  }
+
+  async function marcarLeidas() {
+    await supabase.from("notificaciones").update({ leida: true }).eq("user_id", usuario.id)
+    cargar()
+  }
+
+  const noLeidas = notificaciones.filter(n => !n.leida).length
+
+  return (
+    <div style={{ position:"relative" }}>
+      <button onClick={() => { setAbierto(!abierto); if (!abierto) marcarLeidas() }} style={{
+        background:"none", border:"none", cursor:"pointer", fontSize:22, position:"relative", padding:4
+      }}>
+        🔔
+        {noLeidas > 0 && (
+          <span style={{
+            position:"absolute", top:0, right:0, background:"#E53935", color:"#fff",
+            borderRadius:10, fontSize:10, fontWeight:700, padding:"1px 5px", minWidth:16, textAlign:"center"
+          }}>{noLeidas}</span>
+        )}
+      </button>
+      {abierto && (
+        <div style={{
+          position:"absolute", right:0, top:44, background:"#fff", borderRadius:14,
+          boxShadow:"0 8px 32px rgba(0,0,0,0.15)", width:300, zIndex:1000, overflow:"hidden"
+        }}>
+          <div style={{ padding:"14px 16px", borderBottom:"1px solid #F0F4F8", fontWeight:800, fontSize:14, color:"#0A1628" }}>
+            🔔 Notificaciones
+          </div>
+          {notificaciones.length === 0 && (
+            <div style={{ padding:24, textAlign:"center", color:"#9E9E9E", fontSize:13 }}>Sin notificaciones</div>
+          )}
+          {notificaciones.slice(0,10).map(n => (
+            <div key={n.id} style={{
+              padding:"12px 16px", borderBottom:"1px solid #F0F4F8",
+              background: n.leida ? "#fff" : "#F0FFF4"
+            }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#0A1628" }}>{n.titulo}</div>
+              <div style={{ fontSize:12, color:"#6B7280", marginTop:2 }}>{n.mensaje}</div>
+              <div style={{ fontSize:11, color:"#9E9E9E", marginTop:4 }}>{n.fecha}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 // ── SECCIÓN COMENTARIOS ───────────────────────────────────────────────────────
 function SeccionComentarios({ reclamoId, usuario }) {
   const [comentarios, setComentarios] = useState([])
@@ -673,6 +731,7 @@ function App() {
           </div>
           <div style={{ display:"flex", gap:10, alignItems:"center" }}>
             <div style={{ fontSize:12, color:"#9E9E9E" }}>{new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</div>
+            <Campanita usuario={usuario} />
             <div style={{ width:36, height:36, borderRadius:18, background:"linear-gradient(135deg,#2E7D32,#00796B)", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontWeight:700, fontSize:14 }}>
               {usuario.nombre?.[0]?.toUpperCase()}
             </div>
