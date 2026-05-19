@@ -11,6 +11,7 @@ body {
 
 .leaflet-container {
   font-family: 'Segoe UI', system-ui, sans-serif;
+  z-index: 1;
 }
 
 input:focus, textarea:focus, select:focus {
@@ -26,3 +27,221 @@ button:hover {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #F0F4F8; }
 ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+
+/* ── LAYOUT PRINCIPAL ── */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+.sidebar {
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #0A1628 0%, #1B3A2D 100%);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 100;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.topbar {
+  background: #fff;
+  padding: 14px 24px;
+  border-bottom: 1px solid #E8ECF0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.main-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+/* ── GRIDS ── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.grid-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.grid-admin {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+/* ── AVISOS ADMIN GRID ── */
+.avisos-grid-admin {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 20px;
+}
+
+/* ── MENSAJES GRID ── */
+.mensajes-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+}
+
+/* ── SOCIOS ── */
+.socios-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.socios-search {
+  width: 200px;
+}
+
+/* ── TABLA / CARDS ── */
+.tabla-desktop { display: block; }
+.cards-mobile  { display: none; flex-direction: column; gap: 10px; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  display: none;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE MÓVIL
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Ocultar sidebar */
+  .sidebar {
+    display: none !important;
+  }
+
+  /* Main sin margen lateral */
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  /* Topbar compacto */
+  .topbar {
+    padding: 10px 14px !important;
+  }
+  .topbar-sub  { display: none !important; }
+  .topbar-date { display: none !important; }
+
+  /* Scroll con espacio para bottom nav */
+  .main-scroll {
+    padding: 14px 12px 74px !important;
+  }
+
+  /* Grids → 1 columna */
+  .grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .grid-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .grid-admin {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .avisos-grid-admin {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mensajes-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tabla → ocultar, mostrar cards */
+  .tabla-desktop { display: none !important; }
+  .cards-mobile  { display: flex !important; }
+
+  /* Socios: búsqueda ocupa todo el ancho */
+  .socios-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .socios-search {
+    width: 100% !important;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #E8ECF0;
+    height: 62px;
+    z-index: 500;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  }
+
+  .bottom-nav button {
+    flex: 1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-family: inherit;
+    padding: 6px 2px;
+    transition: opacity 0.2s;
+  }
+
+  .bottom-nav .nav-icon  { font-size: 20px; display: block; }
+  .bottom-nav .nav-label { font-size: 9px; font-weight: 600; display: block; }
+}
+
+@media (max-width: 400px) {
+  .grid-stats { grid-template-columns: 1fr !important; }
+  .grid-admin { grid-template-columns: 1fr !important; }
+  .bottom-nav .nav-label { display: none !important; }
+}
+input, textarea, select {
+  font-size: 16px !important;
+}
+@media (max-width: 768px) {
+  input, textarea, select, button {
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+}
