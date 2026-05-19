@@ -529,8 +529,8 @@ async function descargarCarnet() {
             <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=Socio:${encodeURIComponent(nombre)}-DNI:${dni||"N/A"}-Barrio Las Heras`} alt="QR" style={{ width:100,height:100 }}/>
           </div>
           <div style={{ textAlign:"center",fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:10 }}>ID: {usuario.id?.slice(0,8).toUpperCase()}</div>
-          <button onClick={descargarCarnet} style={{ width:"100%",marginTop:12,padding:"10px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>⬇️ Descargar carnet</button>
         </div>
+       <button onClick={descargarCarnet} style={{ width:"100%",marginTop:12,padding:"10px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>⬇️ Descargar carnet</button>
       </div>
     </div>
   )
