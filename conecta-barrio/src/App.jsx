@@ -263,6 +263,7 @@ function SeccionSocios({ usuario, esAdmin }) {
                   {esAdmin&&<td style={{ padding:"11px 12px" }}>{s.id!==usuario.id&&<div style={{ display:"flex",gap:6 }}>
                     <button onClick={()=>toggleCuota(s.id,s.cuota_al_dia)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:s.cuota_al_dia?"#FFF3E0":"#E8F5E9",color:s.cuota_al_dia?"#E65100":"#2E7D32",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.cuota_al_dia?"Marcar atrasada":"Marcar al día"}</button>
                     <button onClick={()=>toggleAdmin(s.id,s.rol)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:"#E8EAF6",color:"#3949AB",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.rol==="admin"?"Quitar admin":"Hacer admin"}</button>
+                    <button onClick={async()=>{ if (window.confirm("¿Estás seguro de que quieres eliminar este socio?")) { await eliminarSocio(s.id); } }} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:"#FFEBEE",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>🗑️ Eliminar</button>
                   </div>}</td>}
                 </tr>
               ))}
