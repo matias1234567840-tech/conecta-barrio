@@ -289,9 +289,22 @@ function SeccionAvisos({ usuario, esAdmin }) {
   async function publicar() {
     if (!titulo || !contenido) return
     await supabase.from("avisos").insert({ id: getId(), titulo, contenido, autor: usuario.nombre, fecha: hoy() })
-    setTitulo(""); setContenido("")
-    cargar()
-    // Enviar email a todos los socios
+    
+    // Enviar notificación a todos los socios
+    const { data: perfiles } = await supabase.from("profiles").select("id")
+    if (perfiles) {
+      const notifs = perfiles.map(p => ({
+        id: getId(),
+        user_id: p.id,
+        titulo: `📢 Nuevo aviso: ${titulo}`,
+        mensaje: contenido.slice(0, 80) + (contenido.length > 80 ? "..." : ""),
+        leida: false,
+        fecha: hoy()
+      }))
+      await supabase.from("notificaciones").insert(notifs)
+    }
+
+    // Enviar email
     await supabase.functions.invoke("enviar-notificacion", {
       body: {
         tipo: "aviso",
@@ -300,6 +313,9 @@ function SeccionAvisos({ usuario, esAdmin }) {
         contenido: `<h3>${titulo}</h3><p>${contenido}</p><p>— ${usuario.nombre}</p>`
       }
     })
+
+    setTitulo(""); setContenido("")
+    cargar()
   }
 
   async function borrarAviso(id) {
