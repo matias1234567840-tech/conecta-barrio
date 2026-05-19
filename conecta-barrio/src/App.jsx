@@ -81,7 +81,9 @@ function PantallaLogin({ onLogin }) {
     const rol = count === 0 ? "admin" : "socio"
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) { setError(error.message); setCargando(false); return }
-    await supabase.from("profiles").insert({ id: data.user.id, nombre, rol, cuota_al_dia: false, fecha_registro: hoy() })
+    if (!data.user) { setError("Error al crear el usuario, intentá de nuevo"); setCargando(false); return }
+    const { error: errorPerfil } = await supabase.from("profiles").insert({ id: data.user.id, nombre, rol, cuota_al_dia: false, fecha_registro: hoy() })
+    if (errorPerfil) { setError("Error al guardar el perfil: " + errorPerfil.message); setCargando(false); return }
     onLogin({ id: data.user.id, email, nombre, rol, cuota_al_dia: false })
     setCargando(false)
   }
