@@ -146,7 +146,20 @@ function PantallaLogin({ onLogin }) {
             💡 El primer usuario registrado será administrador
           </div>
         )}
-        <div style={{ textAlign:"center", marginTop:16, fontSize:12, color:"#9E9E9E" }}>Juntos hacemos un barrio mejor 💚</div>
+        {modo === "login" && (
+  <div style={{ textAlign:"center", marginTop:12 }}>
+    <button onClick={async () => {
+      if (!email) return alert("Ingresá tu email primero")
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "https://conecta-barrio.vercel.app"
+      })
+      alert("✅ Te enviamos un email para recuperar tu contraseña")
+    }} style={{ background:"none", border:"none", color:"#2E7D32", fontSize:13, cursor:"pointer", fontFamily:"inherit", textDecoration:"underline" }}>
+      ¿Olvidaste tu contraseña?
+    </button>
+  </div>
+)}
+<div style={{ textAlign:"center", marginTop:16, fontSize:12, color:"#9E9E9E" }}>Juntos hacemos un barrio mejor 💚</div>
       </div>
     </div>
   )
