@@ -4,7 +4,6 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaf
 import L from "leaflet"
 import { supabase } from "./supabase"
 
-// ── HOOK MÓVIL ────────────────────────────────────────────────────────────────
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   useEffect(() => {
@@ -15,7 +14,6 @@ function useIsMobile() {
   return isMobile
 }
 
-// ── LOGO ──────────────────────────────────────────────────────────────────────
 const Logo = ({ size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -36,7 +34,6 @@ const Logo = ({ size = 36 }) => (
   </svg>
 )
 
-// ── ICONOS MAPA ───────────────────────────────────────────────────────────────
 const iconPendiente = new L.Icon({ iconUrl: "https://maps.google.com/mapfiles/ms/icons/orange-dot.png", iconSize: [32,32] })
 const iconResuelto  = new L.Icon({ iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",  iconSize: [32,32] })
 
@@ -45,13 +42,12 @@ function MapClick({ setPosicion }) {
   return null
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
 const prioColor = p => p === "alta" ? "#E53935" : p === "media" ? "#F57C00" : "#2E7D32"
 const prioIcon  = p => p === "alta" ? "🔴" : p === "media" ? "🟠" : "🟢"
 const estadoBadge = estado => {
   const isPend = estado === "pendiente"
   return (
-    <span style={{ background: isPend?"#FFF3E0":"#E8F5E9", color: isPend?"#E65100":"#2E7D32", border:`1px solid ${isPend?"#FFB74D":"#81C784"}`, fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20, textTransform:"capitalize", whiteSpace:"nowrap" }}>
+    <span style={{ background:isPend?"#FFF3E0":"#E8F5E9", color:isPend?"#E65100":"#2E7D32", border:`1px solid ${isPend?"#FFB74D":"#81C784"}`, fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20, textTransform:"capitalize", whiteSpace:"nowrap" }}>
       {isPend ? "⏳ Pendiente" : "✅ Resuelto"}
     </span>
   )
@@ -98,34 +94,21 @@ function PantallaLogin({ onLogin }) {
           <div style={{ fontSize:24, fontWeight:900, color:"#0A1628", letterSpacing:-0.5 }}>Conecta Barrio</div>
           <div style={{ fontSize:12, color:"#9E9E9E", marginTop:4 }}>Sociedad de Fomento Barrio Las Heras</div>
         </div>
-
         <div style={{ display:"flex", background:"#F5F7FA", borderRadius:12, padding:4, marginBottom:20 }}>
           {[["login","Iniciar sesión"],["registro","Registrarse"]].map(([val,label]) => (
             <button key={val} onClick={() => { setModo(val); setError("") }} style={{ flex:1, padding:"9px 0", borderRadius:9, border:"none", background:modo===val?"#fff":"none", color:modo===val?"#0A1628":"#9E9E9E", fontWeight:modo===val?700:500, fontSize:14, cursor:"pointer", fontFamily:"inherit", boxShadow:modo===val?"0 2px 8px rgba(0,0,0,0.08)":"none" }}>{label}</button>
           ))}
         </div>
-
-        {modo==="registro" && (
-          <input value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="👤 Nombre completo"
-            style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"1.5px solid #E8ECF0", fontSize:14, fontFamily:"inherit", marginBottom:12, boxSizing:"border-box" }}/>
-        )}
-        <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="📧 Correo electrónico" type="email"
-          style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"1.5px solid #E8ECF0", fontSize:14, fontFamily:"inherit", marginBottom:12, boxSizing:"border-box" }}/>
-        <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="🔒 Contraseña" type="password"
-          onKeyDown={e=>e.key==="Enter"&&(modo==="login"?handleLogin():handleRegistro())}
-          style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"1.5px solid #E8ECF0", fontSize:14, fontFamily:"inherit", marginBottom:16, boxSizing:"border-box" }}/>
-
+        {modo==="registro" && <input value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="👤 Nombre completo" style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"1.5px solid #E8ECF0", fontSize:14, fontFamily:"inherit", marginBottom:12, boxSizing:"border-box" }}/>}
+        <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="📧 Correo electrónico" type="email" style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"1.5px solid #E8ECF0", fontSize:14, fontFamily:"inherit", marginBottom:12, boxSizing:"border-box" }}/>
+        <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="🔒 Contraseña" type="password" onKeyDown={e=>e.key==="Enter"&&(modo==="login"?handleLogin():handleRegistro())} style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"1.5px solid #E8ECF0", fontSize:14, fontFamily:"inherit", marginBottom:16, boxSizing:"border-box" }}/>
         {error && <div style={{ background:"#FFEBEE", color:"#C62828", padding:"10px 14px", borderRadius:10, fontSize:13, marginBottom:14 }}>⚠️ {error}</div>}
-
         <button onClick={modo==="login"?handleLogin:handleRegistro} disabled={cargando} style={{ width:"100%", padding:"13px 0", borderRadius:12, border:"none", background:"linear-gradient(135deg,#2E7D32,#00796B)", color:"#fff", fontWeight:800, fontSize:15, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 14px rgba(46,125,50,0.35)", opacity:cargando?0.7:1 }}>
           {cargando ? "⏳ Cargando..." : (modo==="login" ? "Entrar al barrio 🏘️" : "Crear cuenta")}
         </button>
-
         {modo==="login" && (
           <div style={{ textAlign:"center", marginTop:12 }}>
-            <button onClick={async()=>{ if(!email) return alert("Ingresá tu email primero"); await supabase.auth.resetPasswordForEmail(email,{redirectTo:"https://conecta-barrio.vercel.app"}); alert("✅ Te enviamos un email para recuperar tu contraseña") }} style={{ background:"none", border:"none", color:"#2E7D32", fontSize:13, cursor:"pointer", fontFamily:"inherit", textDecoration:"underline" }}>
-              ¿Olvidaste tu contraseña?
-            </button>
+            <button onClick={async()=>{ if(!email) return alert("Ingresá tu email primero"); await supabase.auth.resetPasswordForEmail(email,{redirectTo:"https://conecta-barrio.vercel.app"}); alert("✅ Revisá tu email") }} style={{ background:"none", border:"none", color:"#2E7D32", fontSize:13, cursor:"pointer", fontFamily:"inherit", textDecoration:"underline" }}>¿Olvidaste tu contraseña?</button>
           </div>
         )}
         {modo==="registro" && <div style={{ fontSize:11, color:"#9E9E9E", textAlign:"center", marginTop:12 }}>💡 El primer usuario registrado será administrador</div>}
@@ -139,21 +122,15 @@ function PantallaLogin({ onLogin }) {
 function Campanita({ usuario }) {
   const [notificaciones, setNotificaciones] = useState([])
   const [abierto, setAbierto] = useState(false)
-
   useEffect(() => { cargar() }, [])
-
   async function cargar() {
     const { data } = await supabase.from("notificaciones").select("*").eq("user_id", usuario.id).order("fecha",{ascending:false})
     if (data) setNotificaciones(data)
   }
-
   async function marcarLeidas() {
-    await supabase.from("notificaciones").update({leida:true}).eq("user_id",usuario.id)
-    cargar()
+    await supabase.from("notificaciones").update({leida:true}).eq("user_id",usuario.id); cargar()
   }
-
   const noLeidas = notificaciones.filter(n=>!n.leida).length
-
   return (
     <div style={{ position:"relative" }}>
       <button onClick={()=>{setAbierto(!abierto);if(!abierto)marcarLeidas()}} style={{ background:"none", border:"none", cursor:"pointer", fontSize:22, position:"relative", padding:4 }}>
@@ -182,24 +159,20 @@ function SeccionComentarios({ reclamoId, usuario }) {
   const [comentarios, setComentarios] = useState([])
   const [texto, setTexto] = useState("")
   const [abierto, setAbierto] = useState(false)
-
   useEffect(()=>{if(abierto)cargar()},[abierto])
-
   async function cargar() {
     const { data } = await supabase.from("comentarios").select("*").eq("reclamo_id",reclamoId).order("fecha",{ascending:true})
     if(data)setComentarios(data)
   }
-
   async function comentar() {
     if(!texto.trim())return
     await supabase.from("comentarios").insert({id:getId(),reclamo_id:reclamoId,user_id:usuario.id,autor:usuario.nombre,texto,fecha:hoy()})
     setTexto(""); cargar()
   }
-
   return (
     <div style={{ marginTop:10, borderTop:"1px solid #F0F4F8", paddingTop:10 }}>
       <button onClick={()=>setAbierto(!abierto)} style={{ background:"none", border:"none", color:"#1565C0", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
-        💬 {abierto ? "Ocultar comentarios" : `Ver comentarios${comentarios.length>0?` (${comentarios.length})`:""}`}
+        💬 {abierto?"Ocultar comentarios":`Ver comentarios${comentarios.length>0?` (${comentarios.length})`:""}`}
       </button>
       {abierto && (
         <div style={{ marginTop:10 }}>
@@ -217,8 +190,7 @@ function SeccionComentarios({ reclamoId, usuario }) {
             </div>
           ))}
           <div style={{ display:"flex", gap:8, marginTop:8 }}>
-            <input value={texto} onChange={e=>setTexto(e.target.value)} placeholder="Escribí un comentario..." onKeyDown={e=>e.key==="Enter"&&comentar()}
-              style={{ flex:1, padding:"8px 12px", borderRadius:8, border:"1.5px solid #E8ECF0", fontSize:13, fontFamily:"inherit" }}/>
+            <input value={texto} onChange={e=>setTexto(e.target.value)} placeholder="Escribí un comentario..." onKeyDown={e=>e.key==="Enter"&&comentar()} style={{ flex:1, padding:"8px 12px", borderRadius:8, border:"1.5px solid #E8ECF0", fontSize:13, fontFamily:"inherit" }}/>
             <button onClick={comentar} style={{ padding:"8px 14px", borderRadius:8, border:"none", background:"linear-gradient(135deg,#2E7D32,#00796B)", color:"#fff", fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>Enviar</button>
           </div>
         </div>
@@ -232,30 +204,22 @@ function SeccionSocios({ usuario, esAdmin }) {
   const [socios, setSocios] = useState([])
   const [busqueda, setBusqueda] = useState("")
   const isMobile = useIsMobile()
-
   useEffect(()=>{cargar()},[])
-
   async function cargar() {
     const { data } = await supabase.from("profiles").select("*")
     if(data)setSocios(data)
   }
-
   async function toggleCuota(id,actual) {
     if(!esAdmin)return
-    await supabase.from("profiles").update({cuota_al_dia:!actual}).eq("id",id)
-    cargar()
+    await supabase.from("profiles").update({cuota_al_dia:!actual}).eq("id",id); cargar()
   }
-
   async function toggleAdmin(id,rolActual) {
     if(!esAdmin)return
-    await supabase.from("profiles").update({rol:rolActual==="admin"?"socio":"admin"}).eq("id",id)
-    cargar()
+    await supabase.from("profiles").update({rol:rolActual==="admin"?"socio":"admin"}).eq("id",id); cargar()
   }
-
   const filtrados = socios.filter(s=>s.nombre?.toLowerCase().includes(busqueda.toLowerCase())||s.email?.toLowerCase().includes(busqueda.toLowerCase()))
   const alDia = socios.filter(s=>s.cuota_al_dia)
   const atrasados = socios.filter(s=>!s.cuota_al_dia)
-
   return (
     <div>
       <div className="grid-stats">
@@ -264,7 +228,7 @@ function SeccionSocios({ usuario, esAdmin }) {
           {icon:"✅",value:alDia.length,label:"Cuota al día",color:"#2E7D32",bg:"#E8F5E9"},
           {icon:"⚠️",value:atrasados.length,label:"Cuota atrasada",color:"#E65100",bg:"#FFF3E0"},
         ].map((s,i)=>(
-          <div key={i} className="stat-card" style={{ background:"#fff", borderRadius:16, padding:"18px 20px", borderTop:`3px solid ${s.color}`, boxShadow:"0 2px 12px rgba(0,0,0,0.06)", display:"flex", alignItems:"center", gap:14 }}>
+          <div key={i} style={{ background:"#fff", borderRadius:16, padding:"18px 20px", borderTop:`3px solid ${s.color}`, boxShadow:"0 2px 12px rgba(0,0,0,0.06)", display:"flex", alignItems:"center", gap:14 }}>
             <div style={{ width:44,height:44,borderRadius:12,background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0 }}>{s.icon}</div>
             <div>
               <div style={{ fontSize:26,fontWeight:900,color:s.color,lineHeight:1 }}>{s.value}</div>
@@ -273,28 +237,19 @@ function SeccionSocios({ usuario, esAdmin }) {
           </div>
         ))}
       </div>
-
-      <div style={{ background:"#fff", borderRadius:18, padding: isMobile?14:24, boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
+      <div style={{ background:"#fff", borderRadius:18, padding:isMobile?14:24, boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
         <div className="socios-header">
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
             <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Gestión de Socios</h2>
           </div>
-          <input value={busqueda} onChange={e=>setBusqueda(e.target.value)} placeholder="🔍 Buscar..."
-            className="socios-search"
-            style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit" }}/>
+          <input value={busqueda} onChange={e=>setBusqueda(e.target.value)} placeholder="🔍 Buscar..." className="socios-search" style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit" }}/>
         </div>
-
-        {/* Desktop: tabla */}
         <div className="tabla-desktop">
           <table style={{ width:"100%",borderCollapse:"collapse" }}>
-            <thead>
-              <tr style={{ background:"#F5F7FA" }}>
-                {["Nombre","Email","Rol","Cuota",esAdmin?"Acciones":""].map(h=>(
-                  <th key={h} style={{ textAlign:"left",padding:"10px 12px",fontSize:11,color:"#9E9E9E",fontWeight:700 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
+            <thead><tr style={{ background:"#F5F7FA" }}>
+              {["Nombre","Email","Rol","Cuota",esAdmin?"Acciones":""].map(h=><th key={h} style={{ textAlign:"left",padding:"10px 12px",fontSize:11,color:"#9E9E9E",fontWeight:700 }}>{h}</th>)}
+            </tr></thead>
             <tbody>
               {filtrados.length===0&&<tr><td colSpan={5} style={{ textAlign:"center",padding:28,color:"#9E9E9E" }}>Sin socios</td></tr>}
               {filtrados.map(s=>(
@@ -303,21 +258,15 @@ function SeccionSocios({ usuario, esAdmin }) {
                   <td style={{ padding:"11px 12px",fontSize:12,color:"#9E9E9E" }}>{s.email}</td>
                   <td style={{ padding:"11px 12px" }}><span style={{ fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:s.rol==="admin"?"#E8EAF6":"#F5F7FA",color:s.rol==="admin"?"#3949AB":"#9E9E9E" }}>{s.rol==="admin"?"⚙️ Admin":"👤 Socio"}</span></td>
                   <td style={{ padding:"11px 12px" }}><span style={{ fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:s.cuota_al_dia?"#E8F5E9":"#FFF3E0",color:s.cuota_al_dia?"#2E7D32":"#E65100" }}>{s.cuota_al_dia?"✅ Al día":"⚠️ Atrasada"}</span></td>
-                  {esAdmin&&<td style={{ padding:"11px 12px" }}>
-                    {s.id!==usuario.id&&(
-                      <div style={{ display:"flex",gap:6 }}>
-                        <button onClick={()=>toggleCuota(s.id,s.cuota_al_dia)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:s.cuota_al_dia?"#FFF3E0":"#E8F5E9",color:s.cuota_al_dia?"#E65100":"#2E7D32",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.cuota_al_dia?"Marcar atrasada":"Marcar al día"}</button>
-                        <button onClick={()=>toggleAdmin(s.id,s.rol)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:"#E8EAF6",color:"#3949AB",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.rol==="admin"?"Quitar admin":"Hacer admin"}</button>
-                      </div>
-                    )}
-                  </td>}
+                  {esAdmin&&<td style={{ padding:"11px 12px" }}>{s.id!==usuario.id&&<div style={{ display:"flex",gap:6 }}>
+                    <button onClick={()=>toggleCuota(s.id,s.cuota_al_dia)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:s.cuota_al_dia?"#FFF3E0":"#E8F5E9",color:s.cuota_al_dia?"#E65100":"#2E7D32",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.cuota_al_dia?"Marcar atrasada":"Marcar al día"}</button>
+                    <button onClick={()=>toggleAdmin(s.id,s.rol)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:"#E8EAF6",color:"#3949AB",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.rol==="admin"?"Quitar admin":"Hacer admin"}</button>
+                  </div>}</td>}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-
-        {/* Mobile: cards */}
         <div className="cards-mobile">
           {filtrados.length===0&&<div style={{ textAlign:"center",padding:28,color:"#9E9E9E",fontSize:13 }}>Sin socios</div>}
           {filtrados.map(s=>(
@@ -329,12 +278,10 @@ function SeccionSocios({ usuario, esAdmin }) {
                 </div>
                 <span style={{ fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:s.cuota_al_dia?"#E8F5E9":"#FFF3E0",color:s.cuota_al_dia?"#2E7D32":"#E65100",flexShrink:0 }}>{s.cuota_al_dia?"✅ Al día":"⚠️ Atrasada"}</span>
               </div>
-              {esAdmin&&s.id!==usuario.id&&(
-                <div style={{ display:"flex",gap:8,marginTop:8 }}>
-                  <button onClick={()=>toggleCuota(s.id,s.cuota_al_dia)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"none",background:s.cuota_al_dia?"#FFF3E0":"#E8F5E9",color:s.cuota_al_dia?"#E65100":"#2E7D32",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.cuota_al_dia?"Atrasada":"Al día"}</button>
-                  <button onClick={()=>toggleAdmin(s.id,s.rol)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#E8EAF6",color:"#3949AB",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.rol==="admin"?"Quitar admin":"Hacer admin"}</button>
-                </div>
-              )}
+              {esAdmin&&s.id!==usuario.id&&<div style={{ display:"flex",gap:8,marginTop:8 }}>
+                <button onClick={()=>toggleCuota(s.id,s.cuota_al_dia)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"none",background:s.cuota_al_dia?"#FFF3E0":"#E8F5E9",color:s.cuota_al_dia?"#E65100":"#2E7D32",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.cuota_al_dia?"Atrasada":"Al día"}</button>
+                <button onClick={()=>toggleAdmin(s.id,s.rol)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"none",background:"#E8EAF6",color:"#3949AB",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.rol==="admin"?"Quitar admin":"Hacer admin"}</button>
+              </div>}
             </div>
           ))}
         </div>
@@ -349,32 +296,26 @@ function SeccionAvisos({ usuario, esAdmin }) {
   const [titulo, setTitulo] = useState("")
   const [contenido, setContenido] = useState("")
   const isMobile = useIsMobile()
-
   useEffect(()=>{cargar()},[])
-
   async function cargar() {
     const { data } = await supabase.from("avisos").select("*").order("fecha",{ascending:false})
     if(data)setAvisos(data)
   }
-
   async function publicar() {
     if(!titulo||!contenido)return
     await supabase.from("avisos").insert({id:getId(),titulo,contenido,autor:usuario.nombre,fecha:hoy()})
     setTitulo(""); setContenido(""); cargar()
   }
-
   return (
-    <div className={esAdmin && !isMobile ? "avisos-grid-admin" : ""}>
-      {esAdmin && (
+    <div className={esAdmin&&!isMobile?"avisos-grid-admin":""}>
+      {esAdmin&&(
         <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)",alignSelf:"start" }}>
           <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
             <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
             <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Publicar aviso</h2>
           </div>
-          <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="📢 Título del aviso"
-            style={{ width:"100%",padding:"11px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-          <textarea value={contenido} onChange={e=>setContenido(e.target.value)} placeholder="Escribí el contenido..." rows={4}
-            style={{ width:"100%",padding:"11px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:14,boxSizing:"border-box",resize:"none" }}/>
+          <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="📢 Título del aviso" style={{ width:"100%",padding:"11px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
+          <textarea value={contenido} onChange={e=>setContenido(e.target.value)} placeholder="Escribí el contenido..." rows={4} style={{ width:"100%",padding:"11px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:14,boxSizing:"border-box",resize:"none" }}/>
           <button onClick={publicar} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>📢 Publicar aviso</button>
         </div>
       )}
@@ -406,37 +347,28 @@ function SeccionMensajes({ usuario, esAdmin }) {
   const [texto, setTexto] = useState("")
   const [mensajes, setMensajes] = useState([])
   const isMobile = useIsMobile()
-
   useEffect(()=>{cargarSocios()},[])
   useEffect(()=>{cargarMensajes()},[destinatario])
-
   async function cargarSocios() {
     const { data } = await supabase.from("profiles").select("*")
     if(data)setSocios(data.filter(u=>u.id!==usuario.id))
   }
-
   async function cargarMensajes() {
     if(esAdmin&&!destinatario)return
     let query = supabase.from("mensajes").select("*").order("fecha",{ascending:true})
-    if(esAdmin&&destinatario) {
-      query=query.or(`and(de_id.eq.${usuario.id},para_id.eq.${destinatario.id}),and(de_id.eq.${destinatario.id},para_id.eq.${usuario.id})`)
-    } else {
-      query=query.or(`de_id.eq.${usuario.id},para_id.eq.${usuario.id}`)
-    }
+    if(esAdmin&&destinatario) query=query.or(`and(de_id.eq.${usuario.id},para_id.eq.${destinatario.id}),and(de_id.eq.${destinatario.id},para_id.eq.${usuario.id})`)
+    else query=query.or(`de_id.eq.${usuario.id},para_id.eq.${usuario.id}`)
     const { data } = await query
     if(data)setMensajes(data)
   }
-
   async function enviar() {
     if(!texto.trim()||(esAdmin&&!destinatario))return
     await supabase.from("mensajes").insert({id:getId(),de_id:usuario.id,de_nombre:usuario.nombre,para_id:esAdmin?destinatario.id:null,para_nombre:esAdmin?destinatario.nombre:"Todos",texto,fecha:hoy()})
     setTexto(""); cargarMensajes()
   }
-
   return (
-    <div className={esAdmin && !isMobile ? "mensajes-grid" : ""}>
-      {/* Lista socios — desktop */}
-      {esAdmin && !isMobile && (
+    <div className={esAdmin&&!isMobile?"mensajes-grid":""}>
+      {esAdmin&&!isMobile&&(
         <div style={{ background:"#fff",borderRadius:18,padding:18,boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
           <div style={{ fontWeight:800,fontSize:14,color:"#0A1628",marginBottom:12 }}>Socios</div>
           {socios.length===0&&<div style={{ fontSize:13,color:"#9E9E9E" }}>Sin socios</div>}
@@ -448,24 +380,18 @@ function SeccionMensajes({ usuario, esAdmin }) {
           ))}
         </div>
       )}
-
-      {/* Selector socios — móvil */}
-      {esAdmin && isMobile && (
+      {esAdmin&&isMobile&&(
         <div style={{ marginBottom:12 }}>
-          <select onChange={e=>{ const s=socios.find(x=>x.id===e.target.value); setDestinatario(s||null) }}
-            style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",background:"#fff" }}>
+          <select onChange={e=>{ const s=socios.find(x=>x.id===e.target.value); setDestinatario(s||null) }} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",background:"#fff" }}>
             <option value="">Seleccioná un socio...</option>
             {socios.map(s=><option key={s.id} value={s.id}>{s.nombre}</option>)}
           </select>
         </div>
       )}
-
       <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)",display:"flex",flexDirection:"column" }}>
         <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:14 }}>
           <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
-          <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>
-            {esAdmin?(destinatario?`Mensajes con ${destinatario.nombre}`:"Seleccioná un socio"):"Mis mensajes"}
-          </h2>
+          <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>{esAdmin?(destinatario?`Mensajes con ${destinatario.nombre}`:"Seleccioná un socio"):"Mis mensajes"}</h2>
         </div>
         <div style={{ flex:1,overflowY:"auto",maxHeight:isMobile?300:400,marginBottom:14,display:"flex",flexDirection:"column",gap:8 }}>
           {mensajes.length===0&&<div style={{ textAlign:"center",padding:32,color:"#9E9E9E",fontSize:13 }}>{esAdmin&&!destinatario?"Seleccioná un socio":"Sin mensajes"}</div>}
@@ -481,8 +407,7 @@ function SeccionMensajes({ usuario, esAdmin }) {
         </div>
         {(!esAdmin||destinatario)&&(
           <div style={{ display:"flex",gap:8 }}>
-            <input value={texto} onChange={e=>setTexto(e.target.value)} placeholder="Escribí un mensaje..." onKeyDown={e=>e.key==="Enter"&&enviar()}
-              style={{ flex:1,padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit" }}/>
+            <input value={texto} onChange={e=>setTexto(e.target.value)} placeholder="Escribí un mensaje..." onKeyDown={e=>e.key==="Enter"&&enviar()} style={{ flex:1,padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit" }}/>
             <button onClick={enviar} style={{ padding:"10px 16px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>Enviar</button>
           </div>
         )}
@@ -505,6 +430,7 @@ function App() {
   const [filtro, setFiltro] = useState("todos")
   const [seccion, setSeccion] = useState("reclamos")
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [menuMobileOpen, setMenuMobileOpen] = useState(false)
   const [reclamos, setReclamos] = useState([])
   const isMobile = useIsMobile()
 
@@ -537,6 +463,12 @@ function App() {
 
   async function cerrarSesion() { await supabase.auth.signOut(); setUsuario(null) }
 
+  // Cambiar sección y cerrar menú móvil
+  function irA(id) {
+    setSeccion(id)
+    setMenuMobileOpen(false)
+  }
+
   async function agregar() {
     if(!titulo||!descripcion||!ubicacion||!posicion){ alert("Completá todos los campos y seleccioná la ubicación"); return }
     await supabase.from("reclamos").insert({id:getId(),titulo,descripcion,ubicacion,imagen,posicion_lat:posicion.lat,posicion_lng:posicion.lng,estado:"pendiente",prioridad,fecha:hoy()})
@@ -565,49 +497,58 @@ function App() {
   return (
     <div className="app-layout">
 
-      {/* SIDEBAR — solo desktop */}
-      {!isMobile && (
-        <div className="sidebar" style={{ width: sidebarW }}>
-          <div style={{ padding:"22px 14px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
-            <div style={{ display:"flex",alignItems:"center",gap:10 }}>
-              <Logo size={34}/>
-              {sidebarOpen&&<div>
-                <div style={{ fontSize:13,fontWeight:800,color:"#fff",letterSpacing:-0.3 }}>Conecta Barrio</div>
-                <div style={{ fontSize:10,color:"rgba(255,255,255,0.4)",letterSpacing:0.5 }}>LAS HERAS</div>
-              </div>}
+      {/* OVERLAY móvil */}
+      {isMobile && (
+        <div className={`sidebar-overlay${menuMobileOpen?" visible":""}`} onClick={()=>setMenuMobileOpen(false)}/>
+      )}
+
+      {/* SIDEBAR */}
+      <div className={`sidebar${isMobile&&menuMobileOpen?" open":""}`} style={{ width: isMobile ? 220 : sidebarW }}>
+        <div style={{ padding:"22px 14px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ display:"flex",alignItems:"center",gap:10 }}>
+            <Logo size={34}/>
+            <div>
+              <div style={{ fontSize:13,fontWeight:800,color:"#fff",letterSpacing:-0.3 }}>Conecta Barrio</div>
+              <div style={{ fontSize:10,color:"rgba(255,255,255,0.4)",letterSpacing:0.5 }}>LAS HERAS</div>
             </div>
           </div>
-          <div style={{ flex:1,padding:"10px 8px",overflowY:"auto" }}>
-            {navItems.map(it=>(
-              <button key={it.id} onClick={()=>setSeccion(it.id)} style={{ width:"100%",padding:"10px 10px",borderRadius:10,border:"none",background:seccion===it.id?"rgba(76,175,80,0.18)":"none",color:seccion===it.id?"#66BB6A":"rgba(255,255,255,0.6)",display:"flex",alignItems:"center",gap:10,cursor:"pointer",marginBottom:4,fontWeight:seccion===it.id?700:400,fontSize:13,fontFamily:"inherit",textAlign:"left",borderLeft:seccion===it.id?"3px solid #66BB6A":"3px solid transparent" }}>
-                <span style={{ fontSize:18,flexShrink:0 }}>{it.icon}</span>
-                {sidebarOpen&&<span>{it.label}</span>}
-              </button>
-            ))}
-          </div>
-          {sidebarOpen&&(
-            <div style={{ padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.08)" }}>
-              <div style={{ fontSize:12,fontWeight:700,color:"#fff" }}>{usuario.nombre}</div>
-              <div style={{ fontSize:10,color:"rgba(255,255,255,0.4)" }}>{esAdmin?"⚙️ Administrador":"👤 Socio"}</div>
-            </div>
-          )}
-          <button onClick={cerrarSesion} style={{ margin:"0 8px 6px",padding:8,borderRadius:8,border:"none",background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.5)",cursor:"pointer",fontSize:12,fontFamily:"inherit" }}>
-            {sidebarOpen?"🚪 Cerrar sesión":"🚪"}
-          </button>
+        </div>
+        <div style={{ flex:1,padding:"10px 8px",overflowY:"auto" }}>
+          {navItems.map(it=>(
+            <button key={it.id} onClick={()=>irA(it.id)} style={{ width:"100%",padding:"12px 10px",borderRadius:10,border:"none",background:seccion===it.id?"rgba(76,175,80,0.18)":"none",color:seccion===it.id?"#66BB6A":"rgba(255,255,255,0.6)",display:"flex",alignItems:"center",gap:12,cursor:"pointer",marginBottom:4,fontWeight:seccion===it.id?700:400,fontSize:14,fontFamily:"inherit",textAlign:"left",borderLeft:seccion===it.id?"3px solid #66BB6A":"3px solid transparent" }}>
+              <span style={{ fontSize:20,flexShrink:0 }}>{it.icon}</span>
+              <span>{it.label}</span>
+            </button>
+          ))}
+        </div>
+        <div style={{ padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ fontSize:12,fontWeight:700,color:"#fff" }}>{usuario.nombre}</div>
+          <div style={{ fontSize:10,color:"rgba(255,255,255,0.4)" }}>{esAdmin?"⚙️ Administrador":"👤 Socio"}</div>
+        </div>
+        <button onClick={cerrarSesion} style={{ margin:"0 8px 6px",padding:10,borderRadius:8,border:"none",background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.5)",cursor:"pointer",fontSize:13,fontFamily:"inherit",textAlign:"left" }}>
+          🚪 Cerrar sesión
+        </button>
+        {!isMobile && (
           <button onClick={()=>setSidebarOpen(!sidebarOpen)} style={{ margin:"0 8px 14px",padding:8,borderRadius:8,border:"none",background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.4)",cursor:"pointer",fontSize:14 }}>
             {sidebarOpen?"◀":"▶"}
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* MAIN */}
       <div className="main-content" style={{ marginLeft: isMobile ? 0 : sidebarW }}>
 
         {/* TOPBAR */}
         <div className="topbar">
-          <div>
-            <div style={{ fontSize:isMobile?15:18,fontWeight:900,color:"#0A1628",letterSpacing:-0.5 }}>Panel Comunitario</div>
-            <div className="topbar-sub" style={{ fontSize:11,color:"#9E9E9E",marginTop:2 }}>Soc. de Fomento Barrio Las Heras · Mar del Plata</div>
+          <div style={{ display:"flex",alignItems:"center",gap:4 }}>
+            {/* Botón hamburguesa — solo móvil */}
+            <button className="hamburger-btn" onClick={()=>setMenuMobileOpen(!menuMobileOpen)}>
+              <span/><span/><span/>
+            </button>
+            <div>
+              <div style={{ fontSize:isMobile?15:18,fontWeight:900,color:"#0A1628",letterSpacing:-0.5 }}>Panel Comunitario</div>
+              <div className="topbar-sub" style={{ fontSize:11,color:"#9E9E9E",marginTop:2 }}>Soc. de Fomento Barrio Las Heras</div>
+            </div>
           </div>
           <div style={{ display:"flex",gap:8,alignItems:"center" }}>
             <span className="topbar-date" style={{ fontSize:11,color:"#9E9E9E" }}>{new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</span>
@@ -615,16 +556,12 @@ function App() {
             <div style={{ width:32,height:32,borderRadius:16,background:"linear-gradient(135deg,#2E7D32,#00796B)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13,flexShrink:0 }}>
               {usuario.nombre?.[0]?.toUpperCase()}
             </div>
-            {isMobile&&(
-              <button onClick={cerrarSesion} style={{ background:"none",border:"none",fontSize:18,cursor:"pointer",padding:4 }}>🚪</button>
-            )}
           </div>
         </div>
 
         {/* CONTENIDO */}
         <div className="main-scroll">
 
-          {/* Stats */}
           {(seccion==="reclamos"||seccion==="admin")&&(
             <div className="grid-stats">
               {[
@@ -632,7 +569,7 @@ function App() {
                 {icon:"⏳",value:pendientes.length,label:"Pendientes",color:"#E65100",bg:"#FFF3E0"},
                 {icon:"✅",value:resueltos.length,label:"Resueltos",color:"#2E7D32",bg:"#E8F5E9"},
               ].map((s,i)=>(
-                <div key={i} className="stat-card" style={{ background:"#fff",borderRadius:14,padding:"14px 16px",borderTop:`3px solid ${s.color}`,boxShadow:"0 2px 10px rgba(0,0,0,0.06)",display:"flex",alignItems:"center",gap:12 }}>
+                <div key={i} style={{ background:"#fff",borderRadius:14,padding:"14px 16px",borderTop:`3px solid ${s.color}`,boxShadow:"0 2px 10px rgba(0,0,0,0.06)",display:"flex",alignItems:"center",gap:12 }}>
                   <div style={{ width:40,height:40,borderRadius:11,background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0 }}>{s.icon}</div>
                   <div>
                     <div style={{ fontSize:22,fontWeight:900,color:s.color,lineHeight:1 }}>{s.value}</div>
@@ -643,10 +580,8 @@ function App() {
             </div>
           )}
 
-          {/* RECLAMOS */}
           {seccion==="reclamos"&&(
             <div className="grid-2">
-              {/* Formulario */}
               <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:22,boxShadow:"0 2px 10px rgba(0,0,0,0.06)" }}>
                 <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
                   <div style={{ width:5,height:22,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
@@ -658,8 +593,7 @@ function App() {
                     <input value={val} onChange={e=>set(e.target.value)} placeholder={ph} style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
                   </div>
                 ))}
-                <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="💬 Descripción..." rows={3}
-                  style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
+                <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="💬 Descripción..." rows={3} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
                 <div style={{ marginBottom:10 }}>
                   <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>PRIORIDAD</div>
                   <div style={{ display:"flex",gap:8 }}>
@@ -685,18 +619,13 @@ function App() {
                     </MapContainer>
                   </div>
                 </div>
-                <button onClick={agregar} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 14px rgba(46,125,50,0.35)" }}>
-                  ➕ Crear reclamo
-                </button>
+                <button onClick={agregar} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 14px rgba(46,125,50,0.35)" }}>➕ Crear reclamo</button>
               </div>
 
-              {/* Lista */}
               <div>
                 <div style={{ display:"flex",gap:8,marginBottom:12,flexWrap:"wrap" }}>
                   {[["todos","Todos","#1565C0"],["pendiente","Pendientes","#E65100"],["resuelto","Resueltos","#2E7D32"]].map(([val,label,col])=>(
-                    <button key={val} onClick={()=>setFiltro(val)} style={{ padding:"6px 14px",borderRadius:18,border:"none",background:filtro===val?col:"#fff",color:filtro===val?"#fff":"#9E9E9E",fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:"inherit",boxShadow:filtro===val?`0 4px 12px ${col}44`:"0 2px 6px rgba(0,0,0,0.06)" }}>
-                      {label}
-                    </button>
+                    <button key={val} onClick={()=>setFiltro(val)} style={{ padding:"6px 14px",borderRadius:18,border:"none",background:filtro===val?col:"#fff",color:filtro===val?"#fff":"#9E9E9E",fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:"inherit",boxShadow:filtro===val?`0 4px 12px ${col}44`:"0 2px 6px rgba(0,0,0,0.06)" }}>{label}</button>
                   ))}
                   <span style={{ fontSize:12,color:"#9E9E9E",alignSelf:"center",marginLeft:"auto" }}>{filtrados.length} reclamos</span>
                 </div>
@@ -719,9 +648,7 @@ function App() {
                           <span style={{ fontSize:11,color:"#9E9E9E" }}>{r.fecha}</span>
                         </div>
                         <div style={{ display:"flex",gap:8 }}>
-                          <button onClick={()=>toggle(r.id,r.estado)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"none",background:r.estado==="pendiente"?"linear-gradient(135deg,#2E7D32,#00796B)":"linear-gradient(135deg,#E65100,#F57C00)",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>
-                            {r.estado==="pendiente"?"✅ Resolver":"↩ Reabrir"}
-                          </button>
+                          <button onClick={()=>toggle(r.id,r.estado)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"none",background:r.estado==="pendiente"?"linear-gradient(135deg,#2E7D32,#00796B)":"linear-gradient(135deg,#E65100,#F57C00)",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{r.estado==="pendiente"?"✅ Resolver":"↩ Reabrir"}</button>
                           {r.posicion&&<button onClick={()=>{setSeccion("mapa");setTimeout(()=>{if(map)map.flyTo([r.posicion.lat,r.posicion.lng],17)},300)}} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"1.5px solid #E8ECF0",background:"#fff",color:"#1565C0",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>🗺️ Mapa</button>}
                           <button onClick={()=>borrar(r.id)} style={{ padding:"7px 12px",borderRadius:8,border:"1.5px solid #FFCDD2",background:"#FFF5F5",color:"#C62828",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>🗑️</button>
                         </div>
@@ -734,7 +661,6 @@ function App() {
             </div>
           )}
 
-          {/* MAPA */}
           {seccion==="mapa"&&(
             <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:22,boxShadow:"0 2px 10px rgba(0,0,0,0.06)" }}>
               <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap" }}>
@@ -749,7 +675,7 @@ function App() {
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
                   {reclamos.filter(r=>r.posicion).map(r=>(
                     <Marker key={r.id} position={[r.posicion.lat,r.posicion.lng]} icon={r.estado==="pendiente"?iconPendiente:iconResuelto}>
-                      <Popup><b>{r.titulo}</b><br/>{r.descripcion}<br/><small>📍 {r.ubicacion}</small><br/><small>{prioIcon(r.prioridad)} {r.prioridad}</small></Popup>
+                      <Popup><b>{r.titulo}</b><br/>{r.descripcion}<br/><small>📍 {r.ubicacion}</small></Popup>
                     </Marker>
                   ))}
                 </MapContainer>
@@ -761,7 +687,6 @@ function App() {
           {seccion==="avisos"&&<SeccionAvisos usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="mensajes"&&<SeccionMensajes usuario={usuario} esAdmin={esAdmin}/>}
 
-          {/* ADMIN */}
           {seccion==="admin"&&esAdmin&&(
             <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:22,boxShadow:"0 2px 10px rgba(0,0,0,0.06)" }}>
               <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:18 }}>
@@ -773,9 +698,9 @@ function App() {
                   {icon:"📋",label:"Total reclamos",value:reclamos.length,col:"#1565C0"},
                   {icon:"⏳",label:"Pendientes",value:pendientes.length,col:"#E65100"},
                   {icon:"✅",label:"Resueltos",value:resueltos.length,col:"#2E7D32"},
-                  {icon:"🔴",label:"Prioridad alta",value:reclamos.filter(r=>r.prioridad==="alta").length,col:"#E53935"},
-                  {icon:"🟠",label:"Prioridad media",value:reclamos.filter(r=>r.prioridad==="media").length,col:"#F57C00"},
-                  {icon:"🟢",label:"Prioridad baja",value:reclamos.filter(r=>r.prioridad==="baja").length,col:"#2E7D32"},
+                  {icon:"🔴",label:"Alta",value:reclamos.filter(r=>r.prioridad==="alta").length,col:"#E53935"},
+                  {icon:"🟠",label:"Media",value:reclamos.filter(r=>r.prioridad==="media").length,col:"#F57C00"},
+                  {icon:"🟢",label:"Baja",value:reclamos.filter(r=>r.prioridad==="baja").length,col:"#2E7D32"},
                 ].map((s,i)=>(
                   <div key={i} style={{ background:"#F5F7FA",borderRadius:12,padding:"14px 12px",borderTop:`3px solid ${s.col}`,textAlign:"center" }}>
                     <div style={{ fontSize:22 }}>{s.icon}</div>
@@ -784,17 +709,12 @@ function App() {
                   </div>
                 ))}
               </div>
-
               <div style={{ fontWeight:800,fontSize:14,color:"#0A1628",marginBottom:12 }}>Todos los reclamos</div>
-
-              {/* Desktop: tabla */}
               <div className="tabla-desktop">
                 <table style={{ width:"100%",borderCollapse:"collapse" }}>
-                  <thead>
-                    <tr style={{ background:"#F5F7FA" }}>
-                      {["Título","Ubicación","Prioridad","Estado","Fecha","Acción"].map(h=><th key={h} style={{ textAlign:"left",padding:"10px 12px",fontSize:11,color:"#9E9E9E",fontWeight:700 }}>{h}</th>)}
-                    </tr>
-                  </thead>
+                  <thead><tr style={{ background:"#F5F7FA" }}>
+                    {["Título","Ubicación","Prioridad","Estado","Fecha","Acción"].map(h=><th key={h} style={{ textAlign:"left",padding:"10px 12px",fontSize:11,color:"#9E9E9E",fontWeight:700 }}>{h}</th>)}
+                  </tr></thead>
                   <tbody>
                     {reclamos.length===0&&<tr><td colSpan={6} style={{ textAlign:"center",padding:28,color:"#9E9E9E" }}>Sin reclamos</td></tr>}
                     {reclamos.map(r=>(
@@ -815,8 +735,6 @@ function App() {
                   </tbody>
                 </table>
               </div>
-
-              {/* Mobile: cards */}
               <div className="cards-mobile">
                 {reclamos.map(r=>(
                   <div key={r.id} style={{ background:"#F5F7FA",borderRadius:12,padding:14,borderLeft:`4px solid ${prioColor(r.prioridad)}` }}>
@@ -837,19 +755,6 @@ function App() {
 
         </div>
       </div>
-
-      {/* BOTTOM NAV — solo móvil */}
-      {isMobile && (
-        <div className="bottom-nav">
-          {navItems.map(it=>(
-            <button key={it.id} onClick={()=>setSeccion(it.id)} style={{ color:seccion===it.id?"#2E7D32":"#9E9E9E" }}>
-              <span className="nav-icon">{it.icon}</span>
-              <span className="nav-label">{it.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
     </div>
   )
 }
