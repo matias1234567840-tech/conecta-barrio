@@ -455,7 +455,70 @@ function SeccionMensajes({ usuario, esAdmin }) {
     </div>
   )
 }
+// ── SECCIÓN COMENTARIOS ───────────────────────────────────────────────────────
+function SeccionComentarios({ reclamoId, usuario }) {
+  const [comentarios, setComentarios] = useState([])
+  const [texto, setTexto] = useState("")
+  const [abierto, setAbierto] = useState(false)
 
+  useEffect(() => { if (abierto) cargar() }, [abierto])
+
+  async function cargar() {
+    const { data } = await supabase.from("comentarios").select("*").eq("reclamo_id", reclamoId).order("fecha", { ascending: true })
+    if (data) setComentarios(data)
+  }
+
+  async function comentar() {
+    if (!texto.trim()) return
+    await supabase.from("comentarios").insert({
+      id: getId(), reclamo_id: reclamoId, user_id: usuario.id,
+      autor: usuario.nombre, texto, fecha: hoy()
+    })
+    setTexto("")
+    cargar()
+  }
+
+  async function borrarComentario(id) {
+    await supabase.from("comentarios").delete().eq("id", id)
+    cargar()
+  }
+
+  return (
+    <div style={{ marginTop:10, borderTop:"1px solid #F0F4F8", paddingTop:10 }}>
+      <button onClick={() => setAbierto(!abierto)} style={{ background:"none", border:"none", color:"#1565C0", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
+        💬 {abierto ? "Ocultar comentarios" : `Ver comentarios ${comentarios.length > 0 ? `(${comentarios.length})` : ""}`}
+      </button>
+      {abierto && (
+        <div style={{ marginTop:10 }}>
+          {comentarios.length === 0 && <div style={{ fontSize:12, color:"#9E9E9E", marginBottom:8 }}>Sin comentarios aún</div>}
+          {comentarios.map(c => (
+            <div key={c.id} style={{ background:"#F5F7FA", borderRadius:8, padding:"8px 12px", marginBottom:6, fontSize:13 }}>
+              <div style={{ display:"flex", justifyContent:"space-between" }}>
+                <span style={{ fontWeight:700, color:"#0A1628" }}>{c.autor}</span>
+                <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                  <span style={{ fontSize:11, color:"#9E9E9E" }}>{c.fecha}</span>
+                  {c.user_id === usuario.id && (
+                    <button onClick={() => borrarComentario(c.id)} style={{ background:"none", border:"none", color:"#C62828", fontSize:11, cursor:"pointer" }}>🗑️</button>
+                  )}
+                </div>
+              </div>
+              <div style={{ color:"#6B7280", marginTop:4 }}>{c.texto}</div>
+            </div>
+          ))}
+          <div style={{ display:"flex", gap:8, marginTop:8 }}>
+            <input value={texto} onChange={e => setTexto(e.target.value)}
+              placeholder="Escribí un comentario..." onKeyDown={e => e.key==="Enter" && comentar()}
+              style={{ flex:1, padding:"8px 12px", borderRadius:8, border:"1.5px solid #E8ECF0", fontSize:13, fontFamily:"inherit" }}
+            />
+            <button onClick={comentar} style={{ padding:"8px 14px", borderRadius:8, border:"none", background:"linear-gradient(135deg,#2E7D32,#00796B)", color:"#fff", fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>
+              Enviar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 // ── APP ───────────────────────────────────────────────────────────────────────
 function App() {
   const [usuario, setUsuario] = useState(null)
@@ -714,6 +777,7 @@ function App() {
                           {r.posicion && <button onClick={() => { setSeccion("mapa"); setTimeout(() => { if(map) map.flyTo([r.posicion.lat,r.posicion.lng],17) },300) }} style={{ flex:1, padding:"8px 0", borderRadius:8, border:"1.5px solid #E8ECF0", background:"#fff", color:"#1565C0", fontWeight:700, fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>🗺️ Ver en mapa</button>}
                           <button onClick={() => borrar(r.id)} style={{ padding:"8px 14px", borderRadius:8, border:"1.5px solid #FFCDD2", background:"#FFF5F5", color:"#C62828", fontWeight:700, fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>🗑️</button>
                         </div>
+                        <SeccionComentarios reclamoId={r.id} usuario={usuario} />
                       </div>
                     </div>
                   ))}
