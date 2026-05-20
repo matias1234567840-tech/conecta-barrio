@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaf
 import L from "leaflet"
 import { supabase } from "./supabase"
 import html2canvas from "html2canvas"
+
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   useEffect(() => {
@@ -220,8 +221,7 @@ function SeccionSocios({ usuario, esAdmin }) {
     await supabase.from("profiles").update({rol:rolActual==="admin"?"socio":"admin"}).eq("id",id); cargar()
   }
   async function eliminarSocio(id) {
-    await supabase.from("profiles").delete().eq("id", id)
-    cargar()
+    await supabase.from("profiles").delete().eq("id", id); cargar()
   }
   const filtrados = socios.filter(s=>s.nombre?.toLowerCase().includes(busqueda.toLowerCase())||s.email?.toLowerCase().includes(busqueda.toLowerCase()))
   const alDia = socios.filter(s=>s.cuota_al_dia)
@@ -267,7 +267,7 @@ function SeccionSocios({ usuario, esAdmin }) {
                   {esAdmin&&<td style={{ padding:"11px 12px" }}>{s.id!==usuario.id&&<div style={{ display:"flex",gap:6 }}>
                     <button onClick={()=>toggleCuota(s.id,s.cuota_al_dia)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:s.cuota_al_dia?"#FFF3E0":"#E8F5E9",color:s.cuota_al_dia?"#E65100":"#2E7D32",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.cuota_al_dia?"Marcar atrasada":"Marcar al día"}</button>
                     <button onClick={()=>toggleAdmin(s.id,s.rol)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:"#E8EAF6",color:"#3949AB",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>{s.rol==="admin"?"Quitar admin":"Hacer admin"}</button>
-                    <button onClick={async()=>{ if (window.confirm("¿Estás seguro de que quieres eliminar este socio?")) { await eliminarSocio(s.id); } }} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:"#FFEBEE",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>🗑️ Eliminar</button>
+                    <button onClick={async()=>{ if(window.confirm("¿Estás seguro de que querés eliminar este socio?")) await eliminarSocio(s.id) }} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:"#FFEBEE",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>🗑️ Eliminar</button>
                   </div>}</td>}
                 </tr>
               ))}
@@ -422,6 +422,7 @@ function SeccionMensajes({ usuario, esAdmin }) {
     </div>
   )
 }
+
 // ── PERFIL Y CARNET ───────────────────────────────────────────────────────────
 function SeccionPerfil({ usuario, setUsuario }) {
   const [nombre, setNombre] = useState(usuario.nombre||"")
@@ -430,10 +431,10 @@ function SeccionPerfil({ usuario, setUsuario }) {
   const [foto, setFoto] = useState(usuario.foto||null)
   const [guardando, setGuardando] = useState(false)
   const [exito, setExito] = useState(false)
-  const [verCarnet, setVerCarnet] = useState(false)
   const carnetRef = useRef(null)
   const isMobile = useIsMobile()
-async function descargarCarnet() {
+
+  async function descargarCarnet() {
     if(!carnetRef.current) return
     const canvas = await html2canvas(carnetRef.current, { scale: 2, useCORS: true })
     const link = document.createElement("a")
@@ -441,6 +442,7 @@ async function descargarCarnet() {
     link.href = canvas.toDataURL()
     link.click()
   }
+
   async function guardar() {
     setGuardando(true)
     const { error } = await supabase.from("profiles").update({ nombre, direccion, dni, foto }).eq("id", usuario.id)
@@ -530,11 +532,14 @@ async function descargarCarnet() {
           </div>
           <div style={{ textAlign:"center",fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:10 }}>ID: {usuario.id?.slice(0,8).toUpperCase()}</div>
         </div>
-       <button onClick={descargarCarnet} style={{ width:"100%",marginTop:12,padding:"10px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>⬇️ Descargar carnet</button>
+        <button onClick={descargarCarnet} style={{ width:"100%",marginTop:12,padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 14px rgba(46,125,50,0.35)" }}>
+          ⬇️ Descargar carnet
+        </button>
       </div>
     </div>
   )
 }
+
 // ── PAGOS ─────────────────────────────────────────────────────────────────────
 function SeccionPagos({ usuario }) {
   const [pagos, setPagos] = useState([])
@@ -640,320 +645,7 @@ function SeccionPagos({ usuario }) {
     </div>
   )
 }
-// ── PAGOS ─────────────────────────────────────────────────────────────────────
-function SeccionPagos({ usuario }) {
-  const [pagos, setPagos] = useState([])
-  const [socios, setSocios] = useState([])
-  const [socioId, setSocioId] = useState("")
-  const [monto, setMonto] = useState("")
-  const [concepto, setConcepto] = useState("Cuota mensual")
-  const [fecha, setFecha] = useState("")
-  const [filtroBusqueda, setFiltroBusqueda] = useState("")
-  const isMobile = useIsMobile()
 
-  useEffect(()=>{ cargar(); cargarSocios() },[])
-
-  async function cargar() {
-    const { data } = await supabase.from("pagos").select("*").order("fecha",{ascending:false})
-    if(data) setPagos(data)
-  }
-
-  async function cargarSocios() {
-    const { data } = await supabase.from("profiles").select("*")
-    if(data) setSocios(data)
-  }
-
-  async function registrarPago() {
-    if(!socioId||!monto||!fecha) return alert("Completá todos los campos")
-    const socio = socios.find(s=>s.id===socioId)
-    await supabase.from("pagos").insert({ id:getId(), user_id:socioId, nombre_socio:socio?.nombre, monto:parseFloat(monto), concepto, fecha, registrado_por:usuario.nombre })
-    await supabase.from("profiles").update({cuota_al_dia:true}).eq("id",socioId)
-    setSocioId(""); setMonto(""); setFecha("")
-    cargar(); cargarSocios()
-  }
-
-  const pagosFiltrados = pagos.filter(p=>p.nombre_socio?.toLowerCase().includes(filtroBusqueda.toLowerCase()))
-
-  return (
-    <div>
-      <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)",marginBottom:20 }}>
-        <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
-          <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
-          <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Registrar pago</h2>
-        </div>
-        <div className={!isMobile?"grid-2":""} style={{ gap:12 }}>
-          <div>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>SOCIO</div>
-            <select value={socioId} onChange={e=>setSocioId(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12 }}>
-              <option value="">Seleccioná un socio...</option>
-              {socios.map(s=><option key={s.id} value={s.id}>{s.nombre}</option>)}
-            </select>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>CONCEPTO</div>
-            <input value={concepto} onChange={e=>setConcepto(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-          </div>
-          <div>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>MONTO ($)</div>
-            <input value={monto} onChange={e=>setMonto(e.target.value)} placeholder="0.00" type="number" style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>FECHA</div>
-            <input value={fecha} onChange={e=>setFecha(e.target.value)} type="date" style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-          </div>
-        </div>
-        <button onClick={registrarPago} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>💰 Registrar pago</button>
-      </div>
-
-      <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10 }}>
-          <div style={{ display:"flex",alignItems:"center",gap:10 }}>
-            <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
-            <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Historial de pagos</h2>
-          </div>
-          <input value={filtroBusqueda} onChange={e=>setFiltroBusqueda(e.target.value)} placeholder="🔍 Buscar socio..." style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit" }}/>
-        </div>
-        <div className="tabla-desktop">
-          <table style={{ width:"100%",borderCollapse:"collapse" }}>
-            <thead><tr style={{ background:"#F5F7FA" }}>
-              {["Socio","Concepto","Monto","Fecha","Registrado por"].map(h=><th key={h} style={{ textAlign:"left",padding:"10px 12px",fontSize:11,color:"#9E9E9E",fontWeight:700 }}>{h}</th>)}
-            </tr></thead>
-            <tbody>
-              {pagosFiltrados.length===0&&<tr><td colSpan={5} style={{ textAlign:"center",padding:28,color:"#9E9E9E" }}>Sin pagos registrados</td></tr>}
-              {pagosFiltrados.map(p=>(
-                <tr key={p.id} style={{ borderBottom:"1px solid #F0F4F8" }}>
-                  <td style={{ padding:"10px 12px",fontSize:13,fontWeight:600,color:"#0A1628" }}>{p.nombre_socio}</td>
-                  <td style={{ padding:"10px 12px",fontSize:13,color:"#6B7280" }}>{p.concepto}</td>
-                  <td style={{ padding:"10px 12px",fontSize:13,fontWeight:700,color:"#2E7D32" }}>${p.monto}</td>
-                  <td style={{ padding:"10px 12px",fontSize:12,color:"#9E9E9E" }}>{p.fecha}</td>
-                  <td style={{ padding:"10px 12px",fontSize:12,color:"#9E9E9E" }}>{p.registrado_por}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="cards-mobile">
-          {pagosFiltrados.length===0&&<div style={{ textAlign:"center",padding:28,color:"#9E9E9E",fontSize:13 }}>Sin pagos registrados</div>}
-          {pagosFiltrados.map(p=>(
-            <div key={p.id} style={{ background:"#F5F7FA",borderRadius:12,padding:14,borderLeft:"4px solid #2E7D32" }}>
-              <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
-                <div style={{ fontWeight:700,fontSize:14,color:"#0A1628" }}>{p.nombre_socio}</div>
-                <div style={{ fontWeight:800,fontSize:14,color:"#2E7D32" }}>${p.monto}</div>
-              </div>
-              <div style={{ fontSize:12,color:"#6B7280" }}>{p.concepto}</div>
-              <div style={{ fontSize:11,color:"#9E9E9E",marginTop:4 }}>{p.fecha} · {p.registrado_por}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}// ── PAGOS ─────────────────────────────────────────────────────────────────────
-function SeccionPagos({ usuario }) {
-  const [pagos, setPagos] = useState([])
-  const [socios, setSocios] = useState([])
-  const [socioId, setSocioId] = useState("")
-  const [monto, setMonto] = useState("")
-  const [concepto, setConcepto] = useState("Cuota mensual")
-  const [fecha, setFecha] = useState("")
-  const [filtroBusqueda, setFiltroBusqueda] = useState("")
-  const isMobile = useIsMobile()
-
-  useEffect(()=>{ cargar(); cargarSocios() },[])
-
-  async function cargar() {
-    const { data } = await supabase.from("pagos").select("*").order("fecha",{ascending:false})
-    if(data) setPagos(data)
-  }
-
-  async function cargarSocios() {
-    const { data } = await supabase.from("profiles").select("*")
-    if(data) setSocios(data)
-  }
-
-  async function registrarPago() {
-    if(!socioId||!monto||!fecha) return alert("Completá todos los campos")
-    const socio = socios.find(s=>s.id===socioId)
-    await supabase.from("pagos").insert({ id:getId(), user_id:socioId, nombre_socio:socio?.nombre, monto:parseFloat(monto), concepto, fecha, registrado_por:usuario.nombre })
-    await supabase.from("profiles").update({cuota_al_dia:true}).eq("id",socioId)
-    setSocioId(""); setMonto(""); setFecha("")
-    cargar(); cargarSocios()
-  }
-
-  const pagosFiltrados = pagos.filter(p=>p.nombre_socio?.toLowerCase().includes(filtroBusqueda.toLowerCase()))
-
-  return (
-    <div>
-      <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)",marginBottom:20 }}>
-        <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
-          <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
-          <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Registrar pago</h2>
-        </div>
-        <div className={!isMobile?"grid-2":""} style={{ gap:12 }}>
-          <div>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>SOCIO</div>
-            <select value={socioId} onChange={e=>setSocioId(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12 }}>
-              <option value="">Seleccioná un socio...</option>
-              {socios.map(s=><option key={s.id} value={s.id}>{s.nombre}</option>)}
-            </select>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>CONCEPTO</div>
-            <input value={concepto} onChange={e=>setConcepto(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-          </div>
-          <div>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>MONTO ($)</div>
-            <input value={monto} onChange={e=>setMonto(e.target.value)} placeholder="0.00" type="number" style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>FECHA</div>
-            <input value={fecha} onChange={e=>setFecha(e.target.value)} type="date" style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-          </div>
-        </div>
-        <button onClick={registrarPago} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>💰 Registrar pago</button>
-      </div>
-
-      <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10 }}>
-          <div style={{ display:"flex",alignItems:"center",gap:10 }}>
-            <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
-            <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Historial de pagos</h2>
-          </div>
-          <input value={filtroBusqueda} onChange={e=>setFiltroBusqueda(e.target.value)} placeholder="🔍 Buscar socio..." style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit" }}/>
-        </div>
-        <div className="tabla-desktop">
-          <table style={{ width:"100%",borderCollapse:"collapse" }}>
-            <thead><tr style={{ background:"#F5F7FA" }}>
-              {["Socio","Concepto","Monto","Fecha","Registrado por"].map(h=><th key={h} style={{ textAlign:"left",padding:"10px 12px",fontSize:11,color:"#9E9E9E",fontWeight:700 }}>{h}</th>)}
-            </tr></thead>
-            <tbody>
-              {pagosFiltrados.length===0&&<tr><td colSpan={5} style={{ textAlign:"center",padding:28,color:"#9E9E9E" }}>Sin pagos registrados</td></tr>}
-              {pagosFiltrados.map(p=>(
-                <tr key={p.id} style={{ borderBottom:"1px solid #F0F4F8" }}>
-                  <td style={{ padding:"10px 12px",fontSize:13,fontWeight:600,color:"#0A1628" }}>{p.nombre_socio}</td>
-                  <td style={{ padding:"10px 12px",fontSize:13,color:"#6B7280" }}>{p.concepto}</td>
-                  <td style={{ padding:"10px 12px",fontSize:13,fontWeight:700,color:"#2E7D32" }}>${p.monto}</td>
-                  <td style={{ padding:"10px 12px",fontSize:12,color:"#9E9E9E" }}>{p.fecha}</td>
-                  <td style={{ padding:"10px 12px",fontSize:12,color:"#9E9E9E" }}>{p.registrado_por}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="cards-mobile">
-          {pagosFiltrados.length===0&&<div style={{ textAlign:"center",padding:28,color:"#9E9E9E",fontSize:13 }}>Sin pagos registrados</div>}
-          {pagosFiltrados.map(p=>(
-            <div key={p.id} style={{ background:"#F5F7FA",borderRadius:12,padding:14,borderLeft:"4px solid #2E7D32" }}>
-              <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
-                <div style={{ fontWeight:700,fontSize:14,color:"#0A1628" }}>{p.nombre_socio}</div>
-                <div style={{ fontWeight:800,fontSize:14,color:"#2E7D32" }}>${p.monto}</div>
-              </div>
-              <div style={{ fontSize:12,color:"#6B7280" }}>{p.concepto}</div>
-              <div style={{ fontSize:11,color:"#9E9E9E",marginTop:4 }}>{p.fecha} · {p.registrado_por}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-// ── PAGOS ─────────────────────────────────────────────────────────────────────
-function SeccionPagos({ usuario }) {
-  const [pagos, setPagos] = useState([])
-  const [socios, setSocios] = useState([])
-  const [socioId, setSocioId] = useState("")
-  const [monto, setMonto] = useState("")
-  const [concepto, setConcepto] = useState("Cuota mensual")
-  const [fecha, setFecha] = useState("")
-  const [filtroBusqueda, setFiltroBusqueda] = useState("")
-  const isMobile = useIsMobile()
-
-  useEffect(()=>{ cargar(); cargarSocios() },[])
-
-  async function cargar() {
-    const { data } = await supabase.from("pagos").select("*").order("fecha",{ascending:false})
-    if(data) setPagos(data)
-  }
-
-  async function cargarSocios() {
-    const { data } = await supabase.from("profiles").select("*")
-    if(data) setSocios(data)
-  }
-
-  async function registrarPago() {
-    if(!socioId||!monto||!fecha) return alert("Completá todos los campos")
-    const socio = socios.find(s=>s.id===socioId)
-    await supabase.from("pagos").insert({ id:getId(), user_id:socioId, nombre_socio:socio?.nombre, monto:parseFloat(monto), concepto, fecha, registrado_por:usuario.nombre })
-    await supabase.from("profiles").update({cuota_al_dia:true}).eq("id",socioId)
-    setSocioId(""); setMonto(""); setFecha("")
-    cargar(); cargarSocios()
-  }
-
-  const pagosFiltrados = pagos.filter(p=>p.nombre_socio?.toLowerCase().includes(filtroBusqueda.toLowerCase()))
-
-  return (
-    <div>
-      <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)",marginBottom:20 }}>
-        <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
-          <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
-          <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Registrar pago</h2>
-        </div>
-        <div className={!isMobile?"grid-2":""} style={{ gap:12 }}>
-          <div>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>SOCIO</div>
-            <select value={socioId} onChange={e=>setSocioId(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12 }}>
-              <option value="">Seleccioná un socio...</option>
-              {socios.map(s=><option key={s.id} value={s.id}>{s.nombre}</option>)}
-            </select>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>CONCEPTO</div>
-            <input value={concepto} onChange={e=>setConcepto(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-          </div>
-          <div>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>MONTO ($)</div>
-            <input value={monto} onChange={e=>setMonto(e.target.value)} placeholder="0.00" type="number" style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-            <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>FECHA</div>
-            <input value={fecha} onChange={e=>setFecha(e.target.value)} type="date" style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
-          </div>
-        </div>
-        <button onClick={registrarPago} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>💰 Registrar pago</button>
-      </div>
-
-      <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10 }}>
-          <div style={{ display:"flex",alignItems:"center",gap:10 }}>
-            <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
-            <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Historial de pagos</h2>
-          </div>
-          <input value={filtroBusqueda} onChange={e=>setFiltroBusqueda(e.target.value)} placeholder="🔍 Buscar socio..." style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit" }}/>
-        </div>
-        <div className="tabla-desktop">
-          <table style={{ width:"100%",borderCollapse:"collapse" }}>
-            <thead><tr style={{ background:"#F5F7FA" }}>
-              {["Socio","Concepto","Monto","Fecha","Registrado por"].map(h=><th key={h} style={{ textAlign:"left",padding:"10px 12px",fontSize:11,color:"#9E9E9E",fontWeight:700 }}>{h}</th>)}
-            </tr></thead>
-            <tbody>
-              {pagosFiltrados.length===0&&<tr><td colSpan={5} style={{ textAlign:"center",padding:28,color:"#9E9E9E" }}>Sin pagos registrados</td></tr>}
-              {pagosFiltrados.map(p=>(
-                <tr key={p.id} style={{ borderBottom:"1px solid #F0F4F8" }}>
-                  <td style={{ padding:"10px 12px",fontSize:13,fontWeight:600,color:"#0A1628" }}>{p.nombre_socio}</td>
-                  <td style={{ padding:"10px 12px",fontSize:13,color:"#6B7280" }}>{p.concepto}</td>
-                  <td style={{ padding:"10px 12px",fontSize:13,fontWeight:700,color:"#2E7D32" }}>${p.monto}</td>
-                  <td style={{ padding:"10px 12px",fontSize:12,color:"#9E9E9E" }}>{p.fecha}</td>
-                  <td style={{ padding:"10px 12px",fontSize:12,color:"#9E9E9E" }}>{p.registrado_por}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="cards-mobile">
-          {pagosFiltrados.length===0&&<div style={{ textAlign:"center",padding:28,color:"#9E9E9E",fontSize:13 }}>Sin pagos registrados</div>}
-          {pagosFiltrados.map(p=>(
-            <div key={p.id} style={{ background:"#F5F7FA",borderRadius:12,padding:14,borderLeft:"4px solid #2E7D32" }}>
-              <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
-                <div style={{ fontWeight:700,fontSize:14,color:"#0A1628" }}>{p.nombre_socio}</div>
-                <div style={{ fontWeight:800,fontSize:14,color:"#2E7D32" }}>${p.monto}</div>
-              </div>
-              <div style={{ fontSize:12,color:"#6B7280" }}>{p.concepto}</div>
-              <div style={{ fontSize:11,color:"#9E9E9E",marginTop:4 }}>{p.fecha} · {p.registrado_por}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
 // ── APP PRINCIPAL ─────────────────────────────────────────────────────────────
 function App() {
   const [usuario, setUsuario] = useState(null)
@@ -1001,11 +693,7 @@ function App() {
 
   async function cerrarSesion() { await supabase.auth.signOut(); setUsuario(null) }
 
-  // Cambiar sección y cerrar menú móvil
-  function irA(id) {
-    setSeccion(id)
-    setMenuMobileOpen(false)
-  }
+  function irA(id) { setSeccion(id); setMenuMobileOpen(false) }
 
   async function agregar() {
     if(!titulo||!descripcion||!ubicacion||!posicion){ alert("Completá todos los campos y seleccioná la ubicación"); return }
@@ -1021,12 +709,13 @@ function App() {
   const resueltos  = reclamos.filter(r=>r.estado==="resuelto")
   const filtrados  = reclamos.filter(r=>filtro==="todos"?true:r.estado===filtro)
 
- const navItems = [
+  const navItems = [
     {id:"reclamos",icon:"📋",label:"Reclamos"},
     {id:"mapa",icon:"🗺️",label:"Mapa"},
     {id:"socios",icon:"🪪",label:"Socios",soloAdmin:true},
     {id:"pagos",icon:"💰",label:"Pagos",soloAdmin:true},
     {id:"perfil",icon:"👤",label:"Mi perfil"},
+    {id:"mis-pagos", icon:"💳", label:"Mis pagos"},
     {id:"avisos",icon:"📢",label:"Avisos"},
     {id:"mensajes",icon:"✉️",label:"Mensajes"},
     {id:"admin",icon:"⚙️",label:"Admin",soloAdmin:true},
@@ -1037,12 +726,10 @@ function App() {
   return (
     <div className="app-layout">
 
-      {/* OVERLAY móvil */}
       {isMobile && (
         <div className={`sidebar-overlay${menuMobileOpen?" visible":""}`} onClick={()=>setMenuMobileOpen(false)}/>
       )}
 
-      {/* SIDEBAR */}
       <div className={`sidebar${isMobile&&menuMobileOpen?" open":""}`} style={{ width: isMobile ? 220 : sidebarW }}>
         <div style={{ padding:"22px 14px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display:"flex",alignItems:"center",gap:10 }}>
@@ -1075,13 +762,9 @@ function App() {
         )}
       </div>
 
-      {/* MAIN */}
       <div className="main-content" style={{ marginLeft: isMobile ? 0 : sidebarW }}>
-
-        {/* TOPBAR */}
         <div className="topbar">
           <div style={{ display:"flex",alignItems:"center",gap:4 }}>
-            {/* Botón hamburguesa — solo móvil */}
             <button className="hamburger-btn" onClick={()=>setMenuMobileOpen(!menuMobileOpen)}>
               <span/><span/><span/>
             </button>
@@ -1099,7 +782,6 @@ function App() {
           </div>
         </div>
 
-        {/* CONTENIDO */}
         <div className="main-scroll">
 
           {(seccion==="reclamos"||seccion==="admin")&&(
@@ -1227,6 +909,7 @@ function App() {
           {seccion==="avisos"&&<SeccionAvisos usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="mensajes"&&<SeccionMensajes usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="perfil"&&<SeccionPerfil usuario={usuario} setUsuario={setUsuario}/>}
+          {seccion==="mis-pagos"&&!esAdmin&&<MisPagos userId={usuario.id} cuotaAlDia={usuario.cuota_al_dia}/>}
           {seccion==="pagos"&&esAdmin&&<SeccionPagos usuario={usuario}/>}
 
           {seccion==="admin"&&esAdmin&&(
