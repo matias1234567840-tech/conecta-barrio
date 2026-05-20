@@ -830,7 +830,7 @@ function App() {
   <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:15 }}>📍</span>
   <input value={ubicacion} onChange={e=>setUbicacion(e.target.value)}
     placeholder="Dirección / Ubicación"
-    onBlur={async () => {
+    onKeyDown={async (e) => { if (e.key !== "Enter") return
       if (!ubicacion.trim()) return
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(ubicacion + ", Mar del Plata")}&format=json&limit=1`)
