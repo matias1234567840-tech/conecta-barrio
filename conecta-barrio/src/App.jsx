@@ -830,7 +830,7 @@ function App() {
   <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:15 }}>📍</span>
   <input value={ubicacion} onChange={e=>setUbicacion(e.target.value)}
     placeholder="Dirección / Ubicación"
-    onKeyDown={async (e) => { if (e.key !== "Enter") return
+    onBlur={async () => {
       if (!ubicacion.trim()) return
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(ubicacion + ", Mar del Plata")}&format=json&limit=1`)
@@ -845,6 +845,11 @@ function App() {
     }}
     style={{ width:"100%", padding:"10px 14px 10px 36px", borderRadius:10, border:"1.5px solid #E8ECF0", fontSize:14, fontFamily:"inherit", boxSizing:"border-box", color:"#0A1628" }}/>
 </div>
+                  <div key={ph} style={{ position:"relative",marginBottom:10 }}>
+                    <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>{ic}</span>
+                    <input value={val} onChange={e=>set(e.target.value)} placeholder={ph} style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
+                  </div>
+                ))}
                 <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="💬 Descripción..." rows={3} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
                 <div style={{ marginBottom:10 }}>
                   <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>PRIORIDAD</div>
@@ -863,7 +868,8 @@ function App() {
                 <div style={{ marginBottom:12 }}>
                   <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>UBICACIÓN {posicion?"✅":"— tocá el mapa"}</div>
                   <div style={{ borderRadius:12,overflow:"hidden",border:"1.5px solid #E8ECF0" }}>
-                    <MapContainer center={posicion ? [posicion.lat, posicion.lng] : [-38.0055,-57.5426]} zoom={posicion ? 16 : 13} style={{ height:isMobile?180:220, width:"100%" }} whenCreated={setMap}>
+                    <MapContainer center={[-38.0055,-57.5426]} zoom={13} style={{ height:isMobile?180:220,width:"100%" }} whenCreated={setMap}>
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
                       <MapClick setPosicion={setPosicion} setUbicacion={setUbicacion}/>
                       {posicion&&<Marker position={[posicion.lat,posicion.lng]} icon={iconPendiente}><Popup>Nueva ubicación</Popup></Marker>}
                       {reclamos.filter(r=>r.posicion).map(r=><Marker key={r.id} position={[r.posicion.lat,r.posicion.lng]} icon={r.estado==="pendiente"?iconPendiente:iconResuelto}><Popup><b>{r.titulo}</b><br/>{r.descripcion}</Popup></Marker>)}
