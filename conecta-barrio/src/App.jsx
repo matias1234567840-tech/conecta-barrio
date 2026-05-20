@@ -1025,7 +1025,7 @@ function App() {
     {id:"reclamos",icon:"📋",label:"Reclamos"},
     {id:"mapa",icon:"🗺️",label:"Mapa"},
     {id:"socios",icon:"🪪",label:"Socios",soloAdmin:true},
-    {id:"pagos",icon:"💰",label:"Pagos",soloAdmin:true}
+    {id:"pagos",icon:"💰",label:"Pagos",soloAdmin:true},
     {id:"perfil",icon:"👤",label:"Mi perfil"},
     {id:"avisos",icon:"📢",label:"Avisos"},
     {id:"mensajes",icon:"✉️",label:"Mensajes"},
