@@ -863,8 +863,7 @@ function App() {
                 <div style={{ marginBottom:12 }}>
                   <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>UBICACIÓN {posicion?"✅":"— tocá el mapa"}</div>
                   <div style={{ borderRadius:12,overflow:"hidden",border:"1.5px solid #E8ECF0" }}>
-                    <MapContainer center={[-38.0055,-57.5426]} zoom={13} style={{ height:isMobile?180:220,width:"100%" }} whenCreated={setMap}>
-                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
+                    <MapContainer center={posicion ? [posicion.lat, posicion.lng] : [-38.0055,-57.5426]} zoom={posicion ? 16 : 13} style={{ height:isMobile?180:220, width:"100%" }} whenCreated={setMap}>
                       <MapClick setPosicion={setPosicion} setUbicacion={setUbicacion}/>
                       {posicion&&<Marker position={[posicion.lat,posicion.lng]} icon={iconPendiente}><Popup>Nueva ubicación</Popup></Marker>}
                       {reclamos.filter(r=>r.posicion).map(r=><Marker key={r.id} position={[r.posicion.lat,r.posicion.lng]} icon={r.estado==="pendiente"?iconPendiente:iconResuelto}><Popup><b>{r.titulo}</b><br/>{r.descripcion}</Popup></Marker>)}
