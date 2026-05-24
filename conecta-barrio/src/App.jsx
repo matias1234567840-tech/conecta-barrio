@@ -38,8 +38,19 @@ const Logo = ({ size = 36 }) => (
 const iconPendiente = new L.Icon({ iconUrl: "https://maps.google.com/mapfiles/ms/icons/orange-dot.png", iconSize: [32,32] })
 const iconResuelto  = new L.Icon({ iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",  iconSize: [32,32] })
 
-function MapClick({ setPosicion }) {
-  useMapEvents({ click(e) { setPosicion({ lat: e.latlng.lat, lng: e.latlng.lng }) } })
+function MapClick({ setPosicion, setUbicacion }) {
+  useMapEvents({
+    async click(e) {
+      const { lat, lng } = e.latlng
+      setPosicion({ lat, lng })
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+        const data = await res.json()
+        const dir = [data.address?.road, data.address?.house_number, data.address?.suburb].filter(Boolean).join(" ")
+        if (dir) setUbicacion(dir)
+      } catch {}
+    }
+  })
   return null
 }
 
@@ -494,7 +505,6 @@ function SeccionPerfil({ usuario, setUsuario }) {
           {guardando?"⏳ Guardando...":"💾 Guardar cambios"}
         </button>
       </div>
-
       <div>
         <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:14 }}>
           <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
@@ -535,6 +545,52 @@ function SeccionPerfil({ usuario, setUsuario }) {
         <button onClick={descargarCarnet} style={{ width:"100%",marginTop:12,padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 14px rgba(46,125,50,0.35)" }}>
           ⬇️ Descargar carnet
         </button>
+      </div>
+    </div>
+  )
+}
+
+// ── MIS PAGOS ─────────────────────────────────────────────────────────────────
+function MisPagos({ userId, cuotaAlDia }) {
+  const [pagos, setPagos] = useState([])
+  const isMobile = useIsMobile()
+  useEffect(()=>{ cargar() },[])
+  async function cargar() {
+    const { data } = await supabase.from("pagos").select("*").eq("user_id", userId).order("fecha",{ascending:false})
+    if(data) setPagos(data)
+  }
+  return (
+    <div>
+      <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)",marginBottom:20 }}>
+        <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
+          <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
+          <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Mi estado de cuota</h2>
+        </div>
+        <div style={{ display:"flex",alignItems:"center",gap:12,padding:"14px 18px",borderRadius:12,background:cuotaAlDia?"#E8F5E9":"#FFF3E0",border:`1.5px solid ${cuotaAlDia?"#81C784":"#FFB74D"}` }}>
+          <div style={{ fontSize:32 }}>{cuotaAlDia?"✅":"⚠️"}</div>
+          <div>
+            <div style={{ fontWeight:800,fontSize:15,color:cuotaAlDia?"#2E7D32":"#E65100" }}>{cuotaAlDia?"Cuota al día":"Cuota atrasada"}</div>
+            <div style={{ fontSize:12,color:"#9E9E9E",marginTop:2 }}>{cuotaAlDia?"Estás al corriente con tus pagos":"Contactá al administrador para regularizar"}</div>
+          </div>
+        </div>
+      </div>
+      <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
+        <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
+          <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
+          <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Historial de pagos</h2>
+        </div>
+        {pagos.length===0&&<div style={{ textAlign:"center",padding:28,color:"#9E9E9E",fontSize:13 }}>Sin pagos registrados</div>}
+        <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+          {pagos.map(p=>(
+            <div key={p.id} style={{ background:"#F5F7FA",borderRadius:12,padding:14,borderLeft:"4px solid #2E7D32" }}>
+              <div style={{ display:"flex",justifyContent:"space-between",marginBottom:4 }}>
+                <div style={{ fontWeight:700,fontSize:14,color:"#0A1628" }}>{p.concepto}</div>
+                <div style={{ fontWeight:800,fontSize:14,color:"#2E7D32" }}>${p.monto}</div>
+              </div>
+              <div style={{ fontSize:11,color:"#9E9E9E" }}>{p.fecha}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -600,7 +656,6 @@ function SeccionPagos({ usuario }) {
         </div>
         <button onClick={registrarPago} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>💰 Registrar pago</button>
       </div>
-
       <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
         <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10 }}>
           <div style={{ display:"flex",alignItems:"center",gap:10 }}>
@@ -715,7 +770,7 @@ function App() {
     {id:"socios",icon:"🪪",label:"Socios",soloAdmin:true},
     {id:"pagos",icon:"💰",label:"Pagos",soloAdmin:true},
     {id:"perfil",icon:"👤",label:"Mi perfil"},
-    {id:"mis-pagos", icon:"💳", label:"Mis pagos"},
+    {id:"mis-pagos",icon:"💳",label:"Mis pagos"},
     {id:"avisos",icon:"📢",label:"Avisos"},
     {id:"mensajes",icon:"✉️",label:"Mensajes"},
     {id:"admin",icon:"⚙️",label:"Admin",soloAdmin:true},
@@ -725,11 +780,9 @@ function App() {
 
   return (
     <div className="app-layout">
-
       {isMobile && (
         <div className={`sidebar-overlay${menuMobileOpen?" visible":""}`} onClick={()=>setMenuMobileOpen(false)}/>
       )}
-
       <div className={`sidebar${isMobile&&menuMobileOpen?" open":""}`} style={{ width: isMobile ? 220 : sidebarW }}>
         <div style={{ padding:"22px 14px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display:"flex",alignItems:"center",gap:10 }}>
@@ -783,7 +836,6 @@ function App() {
         </div>
 
         <div className="main-scroll">
-
           {(seccion==="reclamos"||seccion==="admin")&&(
             <div className="grid-stats">
               {[
@@ -809,12 +861,23 @@ function App() {
                   <div style={{ width:5,height:22,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
                   <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Nuevo reclamo</h2>
                 </div>
-                {[{val:titulo,set:setTitulo,ph:"Título del reclamo",ic:"📝"},{val:ubicacion,set:setUbicacion,ph:"Dirección / Ubicación",ic:"📍"}].map(({val,set,ph,ic})=>(
-                  <div key={ph} style={{ position:"relative",marginBottom:10 }}>
-                    <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>{ic}</span>
-                    <input value={val} onChange={e=>set(e.target.value)} placeholder={ph} style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
-                  </div>
-                ))}
+                <div style={{ position:"relative",marginBottom:10 }}>
+                  <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>📝</span>
+                  <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="Título del reclamo" style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
+                </div>
+                <div style={{ position:"relative",marginBottom:10 }}>
+                  <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>📍</span>
+                  <input value={ubicacion} onChange={e=>setUbicacion(e.target.value)} placeholder="Dirección / Ubicación"
+                    onBlur={async()=>{
+                      if(!ubicacion.trim())return
+                      try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(ubicacion+", Mar del Plata")}&format=json&limit=1`)
+                        const data = await res.json()
+                        if(data[0]){ const lat=parseFloat(data[0].lat); const lng=parseFloat(data[0].lon); setPosicion({lat,lng}); if(map)map.flyTo([lat,lng],16) }
+                      } catch {}
+                    }}
+                    style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
+                </div>
                 <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="💬 Descripción..." rows={3} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
                 <div style={{ marginBottom:10 }}>
                   <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>PRIORIDAD</div>
@@ -835,7 +898,7 @@ function App() {
                   <div style={{ borderRadius:12,overflow:"hidden",border:"1.5px solid #E8ECF0" }}>
                     <MapContainer center={[-38.0055,-57.5426]} zoom={13} style={{ height:isMobile?180:220,width:"100%" }} whenCreated={setMap}>
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
-                      <MapClick setPosicion={setPosicion}/>
+                      <MapClick setPosicion={setPosicion} setUbicacion={setUbicacion}/>
                       {posicion&&<Marker position={[posicion.lat,posicion.lng]} icon={iconPendiente}><Popup>Nueva ubicación</Popup></Marker>}
                       {reclamos.filter(r=>r.posicion).map(r=><Marker key={r.id} position={[r.posicion.lat,r.posicion.lng]} icon={r.estado==="pendiente"?iconPendiente:iconResuelto}><Popup><b>{r.titulo}</b><br/>{r.descripcion}</Popup></Marker>)}
                     </MapContainer>
@@ -909,7 +972,7 @@ function App() {
           {seccion==="avisos"&&<SeccionAvisos usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="mensajes"&&<SeccionMensajes usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="perfil"&&<SeccionPerfil usuario={usuario} setUsuario={setUsuario}/>}
-          {seccion==="mis-pagos"&&!esAdmin&&<MisPagos userId={usuario.id} cuotaAlDia={usuario.cuota_al_dia}/>}
+          {seccion==="mis-pagos"&&<MisPagos userId={usuario.id} cuotaAlDia={usuario.cuota_al_dia}/>}
           {seccion==="pagos"&&esAdmin&&<SeccionPagos usuario={usuario}/>}
 
           {seccion==="admin"&&esAdmin&&(
@@ -977,7 +1040,6 @@ function App() {
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>
