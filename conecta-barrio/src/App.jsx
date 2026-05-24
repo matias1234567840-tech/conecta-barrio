@@ -708,6 +708,9 @@ function App() {
   const [titulo, setTitulo] = useState("")
   const [descripcion, setDescripcion] = useState("")
   const [ubicacion, setUbicacion] = useState("")
+  const [categoria, setCategoria] = useState("")
+const [detalleCategoria, setDetalleCategoria] = useState("")
+const [entreCalles, setEntreCalles] = useState("")
   const [imagen, setImagen] = useState(null)
   const [prioridad, setPrioridad] = useState("media")
   const [posicion, setPosicion] = useState(null)
@@ -751,10 +754,13 @@ function App() {
 
   function irA(id) { setSeccion(id); setMenuMobileOpen(false) }
 
-  async function agregar() {
-    if(!titulo||!descripcion||!ubicacion||!posicion){ alert("Completá todos los campos y seleccioná la ubicación"); return }
-    await supabase.from("reclamos").insert({id:getId(),titulo,descripcion,ubicacion,imagen,posicion_lat:posicion.lat,posicion_lng:posicion.lng,estado:"pendiente",prioridad,fecha:hoy()})
-    setTitulo(""); setDescripcion(""); setUbicacion(""); setPosicion(null); setImagen(null)
+ async function agregar() {
+    if(!titulo||!ubicacion||!categoria){ alert("Completá título, ubicación y categoría"); return }
+    if(categoria==="luz"&&!detalleCategoria){ alert("Seleccioná el tipo de poste"); return }
+    if(categoria==="calle"&&!detalleCategoria){ alert("Seleccioná el tipo de superficie"); return }
+    if(categoria==="microbasural"&&!entreCalles){ alert("Ingresá entre qué calles"); return }
+    await supabase.from("reclamos").insert({id:getId(),titulo,descripcion,ubicacion,imagen,posicion_lat:posicion?.lat||null,posicion_lng:posicion?.lng||null,estado:"pendiente",prioridad,fecha:hoy(),categoria,detalle_categoria:detalleCategoria,entre_calles:entreCalles})
+    setTitulo(""); setDescripcion(""); setUbicacion(""); setPosicion(null); setImagen(null); setCategoria(""); setDetalleCategoria(""); setEntreCalles("")
     cargarReclamos()
   }
 
@@ -862,64 +868,76 @@ function App() {
                   <div style={{ width:5,height:22,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
                   <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Nuevo reclamo</h2>
                 </div>
-                <div style={{ position:"relative",marginBottom:10 }}>
-                  <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>📝</span>
-                  <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="Título del reclamo" style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
-                </div>
-                <div style={{ position:"relative",marginBottom:10 }}>
-  <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15,zIndex:1 }}>📍</span>
-  <input value={ubicacion} onChange={async e=>{ 
-    setUbicacion(e.target.value)
-    if(e.target.value.length<3){ setSugerencias([]); return }
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(e.target.value)}&format=json&limit=8&countrycodes=ar&addressdetails=1&viewbox=-57.7,-38.2,-57.3,-37.8&bounded=15`)
-      const data = await res.json()
-      setSugerencias(data)
-    } catch { setSugerencias([]) }
-  }} placeholder="Dirección / Ubicación" style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
-  {sugerencias.length>0&&(
-    <div style={{ position:"absolute",top:"100%",left:0,right:0,background:"#fff",borderRadius:10,boxShadow:"0 4px 16px rgba(0,0,0,0.12)",zIndex:100,overflow:"hidden",border:"1.5px solid #E8ECF0" }}>
-      {sugerencias.map((s,i)=>(
-        <div key={i} onClick={()=>{ 
-          setUbicacion(s.display_name.split(",").slice(0,3).join(","))
-          setPosicion({lat:parseFloat(s.lat),lng:parseFloat(s.lon)})
-          if(map)map.flyTo([parseFloat(s.lat),parseFloat(s.lon)],16)
-          setSugerencias([])
-        }} style={{ padding:"10px 14px",fontSize:13,color:"#0A1628",cursor:"pointer",borderBottom:"1px solid #F0F4F8",background:"#fff" }}
-        onMouseEnter={e=>e.currentTarget.style.background="#F5F7FA"}
-        onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
-          📍 {s.display_name.split(",").slice(0,3).join(",")}
-        </div>
+               <div style={{ position:"relative",marginBottom:10 }}>
+  <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>📝</span>
+  <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="Título del reclamo" style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
+</div>
+<div style={{ position:"relative",marginBottom:10 }}>
+  <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>📍</span>
+  <input value={ubicacion} onChange={e=>setUbicacion(e.target.value)} placeholder="Calle y número" style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
+</div>
+<div style={{ marginBottom:10 }}>
+  <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>CATEGORÍA</div>
+  <div style={{ display:"flex",flexWrap:"wrap",gap:8 }}>
+    {[["luz","💡 Luz"],["calle","🛣️ Calle"],["microbasural","🗑️ Microbasural"],["otros","📝 Otros"]].map(([val,label])=>(
+      <button key={val} onClick={()=>{ setCategoria(val); setDetalleCategoria(""); setEntreCalles("") }} style={{ padding:"8px 14px",borderRadius:8,border:`2px solid ${categoria===val?"#2E7D32":"#E8ECF0"}`,background:categoria===val?"#E8F5E9":"#fff",color:categoria===val?"#2E7D32":"#9E9E9E",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{label}</button>
+    ))}
+  </div>
+</div>
+{categoria==="luz"&&(
+  <div style={{ marginBottom:10 }}>
+    <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>TIPO DE POSTE</div>
+    <div style={{ display:"flex",gap:8 }}>
+      {[["madera","🪵 Madera"],["hormigon","🏗️ Hormigón"]].map(([val,label])=>(
+        <button key={val} onClick={()=>setDetalleCategoria(val)} style={{ flex:1,padding:"8px 0",borderRadius:8,border:`2px solid ${detalleCategoria===val?"#1565C0":"#E8ECF0"}`,background:detalleCategoria===val?"#E3F2FD":"#fff",color:detalleCategoria===val?"#1565C0":"#9E9E9E",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{label}</button>
       ))}
     </div>
-  )}
+  </div>
+)}
+{categoria==="calle"&&(
+  <div style={{ marginBottom:10 }}>
+    <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>TIPO DE SUPERFICIE</div>
+    <div style={{ display:"flex",gap:8 }}>
+      {[["asfalto","🖤 Asfalto"],["tierra","🟤 Tierra"],["piedra","⚪ Piedra"]].map(([val,label])=>(
+        <button key={val} onClick={()=>setDetalleCategoria(val)} style={{ flex:1,padding:"8px 0",borderRadius:8,border:`2px solid ${detalleCategoria===val?"#E65100":"#E8ECF0"}`,background:detalleCategoria===val?"#FFF3E0":"#fff",color:detalleCategoria===val?"#E65100":"#9E9E9E",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{label}</button>
+      ))}
+    </div>
+  </div>
+)}
+{categoria==="microbasural"&&(
+  <div style={{ marginBottom:10 }}>
+    <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>ENTRE CALLES</div>
+    <input value={entreCalles} onChange={e=>setEntreCalles(e.target.value)} placeholder="Ej: Pellegrini y San Martín" style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
+  </div>
+)}
+{categoria==="otros"&&(
+  <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="💬 Describí el problema..." rows={3} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
+)}
+<div style={{ marginBottom:10 }}>
+  <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>PRIORIDAD</div>
+  <div style={{ display:"flex",gap:8 }}>
+    {["alta","media","baja"].map(p=>(
+      <button key={p} onClick={()=>setPrioridad(p)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:`2px solid ${prioridad===p?prioColor(p):"#E8ECF0"}`,background:prioridad===p?prioColor(p)+"15":"#fff",color:prioridad===p?prioColor(p):"#9E9E9E",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",textTransform:"capitalize" }}>
+        {prioIcon(p)} {p.charAt(0).toUpperCase()+p.slice(1)}
+      </button>
+    ))}
+  </div>
 </div>
-                <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="💬 Descripción..." rows={3} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
-                <div style={{ marginBottom:10 }}>
-                  <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>PRIORIDAD</div>
-                  <div style={{ display:"flex",gap:8 }}>
-                    {["alta","media","baja"].map(p=>(
-                      <button key={p} onClick={()=>setPrioridad(p)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:`2px solid ${prioridad===p?prioColor(p):"#E8ECF0"}`,background:prioridad===p?prioColor(p)+"15":"#fff",color:prioridad===p?prioColor(p):"#9E9E9E",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",textTransform:"capitalize" }}>
-                        {prioIcon(p)} {p.charAt(0).toUpperCase()+p.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <label style={{ display:"flex",alignItems:"center",gap:10,padding:"9px 14px",borderRadius:10,border:"1.5px dashed #CBD5E1",cursor:"pointer",marginBottom:12,color:"#9E9E9E",fontSize:13 }}>
-                  📷 {imagen?"✅ Foto cargada":"Adjuntar foto (opcional)"}
-                  <input type="file" accept="image/*" style={{ display:"none" }} onChange={e=>{ const f=e.target.files[0];if(f){const r=new FileReader();r.onloadend=()=>setImagen(r.result);r.readAsDataURL(f)} }}/>
-                </label>
-                <div style={{ marginBottom:12 }}>
-                  <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>UBICACIÓN {posicion?"✅":"— tocá el mapa"}</div>
-                  <div style={{ borderRadius:12,overflow:"hidden",border:"1.5px solid #E8ECF0" }}>
-                    <MapContainer center={[-38.0055,-57.5426]} zoom={13} style={{ height:isMobile?180:220,width:"100%" }} whenCreated={setMap}>
-                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
-                      <MapClick setPosicion={setPosicion} setUbicacion={setUbicacion}/>
-                      {posicion&&<Marker position={[posicion.lat,posicion.lng]} icon={iconPendiente}><Popup>Nueva ubicación</Popup></Marker>}
-                      {reclamos.filter(r=>r.posicion).map(r=><Marker key={r.id} position={[r.posicion.lat,r.posicion.lng]} icon={r.estado==="pendiente"?iconPendiente:iconResuelto}><Popup><b>{r.titulo}</b><br/>{r.descripcion}</Popup></Marker>)}
-                    </MapContainer>
-                  </div>
-                </div>
+<label style={{ display:"flex",alignItems:"center",gap:10,padding:"9px 14px",borderRadius:10,border:"1.5px dashed #CBD5E1",cursor:"pointer",marginBottom:12,color:"#9E9E9E",fontSize:13 }}>
+  📷 {imagen?"✅ Foto cargada":"Adjuntar foto (opcional)"}
+  <input type="file" accept="image/*" style={{ display:"none" }} onChange={e=>{ const f=e.target.files[0];if(f){const r=new FileReader();r.onloadend=()=>setImagen(r.result);r.readAsDataURL(f)} }}/>
+</label>
+<div style={{ marginBottom:12 }}>
+  <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>UBICACIÓN EN MAPA (opcional)</div>
+  <div style={{ borderRadius:12,overflow:"hidden",border:"1.5px solid #E8ECF0" }}>
+    <MapContainer center={[-38.0055,-57.5426]} zoom={13} style={{ height:isMobile?180:220,width:"100%" }} whenCreated={setMap}>
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
+      <MapClick setPosicion={setPosicion} setUbicacion={setUbicacion}/>
+      {posicion&&<Marker position={[posicion.lat,posicion.lng]} icon={iconPendiente}><Popup>Ubicación seleccionada</Popup></Marker>}
+      {reclamos.filter(r=>r.posicion).map(r=><Marker key={r.id} position={[r.posicion.lat,r.posicion.lng]} icon={r.estado==="pendiente"?iconPendiente:iconResuelto}><Popup><b>{r.titulo}</b><br/>{r.descripcion}</Popup></Marker>)}
+    </MapContainer>
+  </div>
+</div>
                 <button onClick={agregar} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 14px rgba(46,125,50,0.35)" }}>➕ Crear reclamo</button>
               </div>
 
