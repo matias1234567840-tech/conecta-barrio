@@ -717,6 +717,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [menuMobileOpen, setMenuMobileOpen] = useState(false)
   const [reclamos, setReclamos] = useState([])
+  const [sugerencias, setSugerencias] = useState([])
   const isMobile = useIsMobile()
 
   useEffect(()=>{
@@ -866,18 +867,33 @@ function App() {
                   <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="Título del reclamo" style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
                 </div>
                 <div style={{ position:"relative",marginBottom:10 }}>
-                  <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>📍</span>
-                  <input value={ubicacion} onChange={e=>setUbicacion(e.target.value)} placeholder="Dirección / Ubicación"
-                    onBlur={async()=>{
-                      if(!ubicacion.trim())return
-                      try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(ubicacion+", Mar del Plata")}&format=json&limit=1`)
-                        const data = await res.json()
-                        if(data[0]){ const lat=parseFloat(data[0].lat); const lng=parseFloat(data[0].lon); setPosicion({lat,lng}); if(map)map.flyTo([lat,lng],16) }
-                      } catch {}
-                    }}
-                    style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
-                </div>
+  <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15,zIndex:1 }}>📍</span>
+  <input value={ubicacion} onChange={async e=>{ 
+    setUbicacion(e.target.value)
+    if(e.target.value.length<3){ setSugerencias([]); return }
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(e.target.value+", Mar del Plata")}&format=json&limit=5`)
+      const data = await res.json()
+      setSugerencias(data)
+    } catch { setSugerencias([]) }
+  }} placeholder="Dirección / Ubicación" style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
+  {sugerencias.length>0&&(
+    <div style={{ position:"absolute",top:"100%",left:0,right:0,background:"#fff",borderRadius:10,boxShadow:"0 4px 16px rgba(0,0,0,0.12)",zIndex:100,overflow:"hidden",border:"1.5px solid #E8ECF0" }}>
+      {sugerencias.map((s,i)=>(
+        <div key={i} onClick={()=>{ 
+          setUbicacion(s.display_name.split(",").slice(0,3).join(","))
+          setPosicion({lat:parseFloat(s.lat),lng:parseFloat(s.lon)})
+          if(map)map.flyTo([parseFloat(s.lat),parseFloat(s.lon)],16)
+          setSugerencias([])
+        }} style={{ padding:"10px 14px",fontSize:13,color:"#0A1628",cursor:"pointer",borderBottom:"1px solid #F0F4F8",background:"#fff" }}
+        onMouseEnter={e=>e.currentTarget.style.background="#F5F7FA"}
+        onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+          📍 {s.display_name.split(",").slice(0,3).join(",")}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
                 <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="💬 Descripción..." rows={3} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
                 <div style={{ marginBottom:10 }}>
                   <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>PRIORIDAD</div>
