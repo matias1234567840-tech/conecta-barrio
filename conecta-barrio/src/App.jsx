@@ -872,7 +872,7 @@ function App() {
     setUbicacion(e.target.value)
     if(e.target.value.length<3){ setSugerencias([]); return }
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(e.target.value+", Mar del Plata")}&format=json&limit=5`)
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(e.target.value)}&format=json&limit=8&countrycodes=ar&addressdetails=1&viewbox=-57.7,-38.2,-57.3,-37.8&bounded=15`)
       const data = await res.json()
       setSugerencias(data)
     } catch { setSugerencias([]) }
