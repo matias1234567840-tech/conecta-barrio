@@ -878,11 +878,13 @@ const [entreCalles, setEntreCalles] = useState("")
 </div>
 <div style={{ marginBottom:10 }}>
   <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>CATEGORÍA</div>
-  <div style={{ display:"flex",flexWrap:"wrap",gap:8 }}>
-    {[["luz","💡 Luz"],["calle","🛣️ Calle"],["microbasural","🗑️ Microbasural"],["otros","📝 Otros"]].map(([val,label])=>(
-      <button key={val} onClick={()=>{ setCategoria(val); setDetalleCategoria(""); setEntreCalles("") }} style={{ padding:"8px 14px",borderRadius:8,border:`2px solid ${categoria===val?"#2E7D32":"#E8ECF0"}`,background:categoria===val?"#E8F5E9":"#fff",color:categoria===val?"#2E7D32":"#9E9E9E",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{label}</button>
-    ))}
-  </div>
+  <select value={categoria} onChange={e=>{ setCategoria(e.target.value); setDetalleCategoria(""); setEntreCalles(""); setTitulo(e.target.options[e.target.selectedIndex].text) }} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",background:"#fff",color:"#0A1628" }}>
+    <option value="">Seleccioná una categoría...</option>
+    <option value="luz">Iluminación</option>
+    <option value="calle">Estado de calles</option>
+    <option value="microbasural">Microbasural</option>
+    <option value="otros">Otros</option>
+  </select>
 </div>
 {categoria==="luz"&&(
   <div style={{ marginBottom:10 }}>
