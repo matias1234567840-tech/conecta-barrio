@@ -961,11 +961,17 @@ const [entreCalles, setEntreCalles] = useState("")
                           {estadoBadge(r.estado)}
                         </div>
                         <p style={{ margin:"0 0 8px",fontSize:13,color:"#6B7280",lineHeight:1.5 }}>{r.descripcion}</p>
-                        {r.categoria&&<div style={{ fontSize:12,color:"#6B7280",marginTop:4 }}>
-  <span style={{ fontWeight:700 }}>{r.categoria==="luz"?"Iluminación":r.categoria==="calle"?"Estado de calles":r.categoria==="microbasural"?"Microbasural":"Otros"}</span>
-  {r.detalle_categoria&&<span> — {r.detalle_categoria}</span>}
+                       <span style={{ fontWeight:700 }}>{
+    r.detalle_categoria==="madera"?"Poste de madera":
+    r.detalle_categoria==="hormigon"?"Poste de hormigón":
+    r.detalle_categoria==="asfalto"?"Calle de asfalto":
+    r.detalle_categoria==="tierra"?"Calle de tierra":
+    r.detalle_categoria==="piedra"?"Calle de piedra":
+    r.categoria==="luz"?"Iluminación":
+    r.categoria==="calle"?"Estado de calles":
+    r.categoria==="microbasural"?"Microbasural":"Otros"
+  }</span>
   {r.entre_calles&&<span> — Entre: {r.entre_calles}</span>}
-</div>}
                         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:6 }}>
                           <span style={{ fontSize:11,fontWeight:700,color:prioColor(r.prioridad),background:prioColor(r.prioridad)+"15",padding:"3px 10px",borderRadius:20 }}>{prioIcon(r.prioridad)} {r.prioridad}</span>
                           <span style={{ fontSize:11,color:"#9E9E9E" }}>{r.fecha}</span>
