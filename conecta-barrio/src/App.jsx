@@ -933,11 +933,7 @@ const [entreCalles, setEntreCalles] = useState("")
       <MapClick setPosicion={setPosicion} setUbicacion={setUbicacion}/>
       {posicion&&<Marker position={[posicion.lat,posicion.lng]} icon={iconPendiente}><Popup>Ubicación seleccionada</Popup></Marker>}
       {reclamos.filter(r=>r.posicion).map(r=><Marker key={r.id} position={[r.posicion.lat,r.posicion.lng]} icon={r.estado==="pendiente"?iconPendiente:iconResuelto}><Popup><b>{r.titulo}</b><br/>{r.descripcion}</Popup></Marker>)}
-      {r.categoria&&<div style={{ fontSize:12,color:"#6B7280",marginTop:4 }}>
-  <span style={{ fontWeight:700 }}>{r.categoria==="luz"?"💡 Iluminación":r.categoria==="calle"?"🛣️ Estado de calles":r.categoria==="microbasural"?"🗑️ Microbasural":"📝 Otros"}</span>
-  {r.detalle_categoria&&<span> — {r.detalle_categoria}</span>}
-  {r.entre_calles&&<span> — Entre: {r.entre_calles}</span>}
-</div>}
+      
     </MapContainer>
   </div>
 </div>
@@ -965,6 +961,11 @@ const [entreCalles, setEntreCalles] = useState("")
                           {estadoBadge(r.estado)}
                         </div>
                         <p style={{ margin:"0 0 8px",fontSize:13,color:"#6B7280",lineHeight:1.5 }}>{r.descripcion}</p>
+                        {r.categoria&&<div style={{ fontSize:12,color:"#6B7280",marginTop:4 }}>
+  <span style={{ fontWeight:700 }}>{r.categoria==="luz"?"Iluminación":r.categoria==="calle"?"Estado de calles":r.categoria==="microbasural"?"Microbasural":"Otros"}</span>
+  {r.detalle_categoria&&<span> — {r.detalle_categoria}</span>}
+  {r.entre_calles&&<span> — Entre: {r.entre_calles}</span>}
+</div>}
                         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:6 }}>
                           <span style={{ fontSize:11,fontWeight:700,color:prioColor(r.prioridad),background:prioColor(r.prioridad)+"15",padding:"3px 10px",borderRadius:20 }}>{prioIcon(r.prioridad)} {r.prioridad}</span>
                           <span style={{ fontSize:11,color:"#9E9E9E" }}>{r.fecha}</span>
