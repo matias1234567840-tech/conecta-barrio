@@ -910,9 +910,7 @@ const [entreCalles, setEntreCalles] = useState("")
     <input value={entreCalles} onChange={e=>setEntreCalles(e.target.value)} placeholder="Ej: Pellegrini y San Martín" style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
   </div>
 )}
-{categoria==="otros"&&(
-  <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="💬 Describí el problema..." rows={3} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
-)}
+<textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="Descripción del problema..." rows={3} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
 <div style={{ marginBottom:10 }}>
   <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>PRIORIDAD</div>
   <div style={{ display:"flex",gap:8 }}>
