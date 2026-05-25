@@ -868,10 +868,7 @@ const [entreCalles, setEntreCalles] = useState("")
                   <div style={{ width:5,height:22,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
                   <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Nuevo reclamo</h2>
                 </div>
-               <div style={{ position:"relative",marginBottom:10 }}>
-  <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>📝</span>
-  <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="Título del reclamo" style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
-</div>
+               
 <div style={{ position:"relative",marginBottom:10 }}>
   <span style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15 }}>📍</span>
   <input value={ubicacion} onChange={e=>setUbicacion(e.target.value)} placeholder="Calle y número" style={{ width:"100%",padding:"10px 14px 10px 36px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",color:"#0A1628" }}/>
