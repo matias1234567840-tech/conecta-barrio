@@ -933,6 +933,11 @@ const [entreCalles, setEntreCalles] = useState("")
       <MapClick setPosicion={setPosicion} setUbicacion={setUbicacion}/>
       {posicion&&<Marker position={[posicion.lat,posicion.lng]} icon={iconPendiente}><Popup>Ubicación seleccionada</Popup></Marker>}
       {reclamos.filter(r=>r.posicion).map(r=><Marker key={r.id} position={[r.posicion.lat,r.posicion.lng]} icon={r.estado==="pendiente"?iconPendiente:iconResuelto}><Popup><b>{r.titulo}</b><br/>{r.descripcion}</Popup></Marker>)}
+      {r.categoria&&<div style={{ fontSize:12,color:"#6B7280",marginTop:4 }}>
+  <span style={{ fontWeight:700 }}>{r.categoria==="luz"?"💡 Iluminación":r.categoria==="calle"?"🛣️ Estado de calles":r.categoria==="microbasural"?"🗑️ Microbasural":"📝 Otros"}</span>
+  {r.detalle_categoria&&<span> — {r.detalle_categoria}</span>}
+  {r.entre_calles&&<span> — Entre: {r.entre_calles}</span>}
+</div>}
     </MapContainer>
   </div>
 </div>
