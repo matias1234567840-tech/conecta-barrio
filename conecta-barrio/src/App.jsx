@@ -886,21 +886,22 @@ const [entreCalles, setEntreCalles] = useState("")
 {categoria==="luz"&&(
   <div style={{ marginBottom:10 }}>
     <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>TIPO DE POSTE</div>
-    <div style={{ display:"flex",gap:8 }}>
-      {[["madera","🪵 Madera"],["hormigon","🏗️ Hormigón"]].map(([val,label])=>(
-        <button key={val} onClick={()=>setDetalleCategoria(val)} style={{ flex:1,padding:"8px 0",borderRadius:8,border:`2px solid ${detalleCategoria===val?"#1565C0":"#E8ECF0"}`,background:detalleCategoria===val?"#E3F2FD":"#fff",color:detalleCategoria===val?"#1565C0":"#9E9E9E",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{label}</button>
-      ))}
-    </div>
+    <select value={detalleCategoria} onChange={e=>setDetalleCategoria(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",background:"#fff",color:"#0A1628" }}>
+      <option value="">Seleccioná el tipo de poste...</option>
+      <option value="madera">Madera</option>
+      <option value="hormigon">Hormigón</option>
+    </select>
   </div>
 )}
 {categoria==="calle"&&(
   <div style={{ marginBottom:10 }}>
     <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>TIPO DE SUPERFICIE</div>
-    <div style={{ display:"flex",gap:8 }}>
-      {[["asfalto","🖤 Asfalto"],["tierra","🟤 Tierra"],["piedra","⚪ Piedra"]].map(([val,label])=>(
-        <button key={val} onClick={()=>setDetalleCategoria(val)} style={{ flex:1,padding:"8px 0",borderRadius:8,border:`2px solid ${detalleCategoria===val?"#E65100":"#E8ECF0"}`,background:detalleCategoria===val?"#FFF3E0":"#fff",color:detalleCategoria===val?"#E65100":"#9E9E9E",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{label}</button>
-      ))}
-    </div>
+    <select value={detalleCategoria} onChange={e=>setDetalleCategoria(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",background:"#fff",color:"#0A1628" }}>
+      <option value="">Seleccioná el tipo de superficie...</option>
+      <option value="asfalto">Asfalto</option>
+      <option value="tierra">Tierra</option>
+      <option value="piedra">Piedra</option>
+    </select>
   </div>
 )}
 {categoria==="microbasural"&&(
