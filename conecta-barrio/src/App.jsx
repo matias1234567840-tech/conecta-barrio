@@ -700,7 +700,230 @@ function SeccionPagos({ usuario }) {
     </div>
   )
 }
+// ── CRONOGRAMA ────────────────────────────────────────────────────────────────
+function SeccionCronograma({ usuario, esAdmin }) {
+  const [celdas, setCeldas] = useState({})
+  const [horarios, setHorarios] = useState([])
+  const [espacios, setEspacios] = useState([])
+  const [nuevoHorario, setNuevoHorario] = useState("")
+  const [nuevoEspacio, setNuevoEspacio] = useState("")
+  const [celdaEditando, setCeldaEditando] = useState(null)
+  const [formCelda, setFormCelda] = useState({ actividad:"", espacio:"" })
+  const isMobile = useIsMobile()
 
+  const DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]
+
+  useEffect(() => { cargar() }, [])
+
+  async function cargar() {
+    const [h, e, c] = await Promise.all([
+      supabase.from("cronograma_horarios").select("*").order("orden"),
+      supabase.from("cronograma_espacios").select("*").order("nombre"),
+      supabase.from("cronograma_celdas").select("*"),
+    ])
+    if (h.data) setHorarios(h.data)
+    if (e.data) setEspacios(e.data)
+    if (c.data) {
+      const mapa = {}
+      c.data.forEach(cel => { mapa[`${cel.horario_id}_${cel.dia}`] = cel })
+      setCeldas(mapa)
+    }
+  }
+
+  async function agregarHorario() {
+    if (!nuevoHorario.trim()) return
+    await supabase.from("cronograma_horarios").insert({ id: getId(), label: nuevoHorario.trim(), orden: horarios.length })
+    setNuevoHorario("")
+    cargar()
+  }
+
+  async function eliminarHorario(id) {
+    if (!window.confirm("¿Eliminar este horario?")) return
+    await supabase.from("cronograma_horarios").delete().eq("id", id)
+    await supabase.from("cronograma_celdas").delete().eq("horario_id", id)
+    cargar()
+  }
+
+  async function agregarEspacio() {
+    if (!nuevoEspacio.trim()) return
+    await supabase.from("cronograma_espacios").insert({ id: getId(), nombre: nuevoEspacio.trim() })
+    setNuevoEspacio("")
+    cargar()
+  }
+
+  async function eliminarEspacio(id) {
+    if (!window.confirm("¿Eliminar este espacio?")) return
+    await supabase.from("cronograma_espacios").delete().eq("id", id)
+    cargar()
+  }
+
+  async function guardarCelda() {
+    if (!celdaEditando) return
+    const { horarioId, dia } = celdaEditando
+    const key = `${horarioId}_${dia}`
+    if (!formCelda.actividad.trim()) {
+      // Si está vacío, borrar la celda
+      await supabase.from("cronograma_celdas").delete().eq("horario_id", horarioId).eq("dia", dia)
+    } else {
+      const existe = celdas[key]
+      if (existe) {
+        await supabase.from("cronograma_celdas").update({ actividad: formCelda.actividad, espacio: formCelda.espacio }).eq("id", existe.id)
+      } else {
+        await supabase.from("cronograma_celdas").insert({ id: getId(), horario_id: horarioId, dia, actividad: formCelda.actividad, espacio: formCelda.espacio })
+      }
+    }
+    setCeldaEditando(null)
+    cargar()
+  }
+
+  function abrirCelda(horarioId, dia) {
+    if (!esAdmin) return
+    const key = `${horarioId}_${dia}`
+    const celda = celdas[key]
+    setFormCelda({ actividad: celda?.actividad || "", espacio: celda?.espacio || "" })
+    setCeldaEditando({ horarioId, dia })
+  }
+
+  return (
+    <div>
+      {/* Modal editar celda */}
+      {celdaEditando && (
+        <div onClick={e=>e.target===e.currentTarget&&setCeldaEditando(null)}
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div style={{ background:"#fff", borderRadius:18, padding:24, width:"100%", maxWidth:400 }}>
+            <div style={{ fontWeight:800, fontSize:16, marginBottom:16, color:"#0A1628" }}>
+              ✏️ {celdaEditando.dia} — {horarios.find(h=>h.id===celdaEditando.horarioId)?.label}
+            </div>
+            <div style={{ fontSize:11, fontWeight:700, color:"#9E9E9E", marginBottom:6 }}>ACTIVIDAD</div>
+            <input value={formCelda.actividad} onChange={e=>setFormCelda({...formCelda, actividad:e.target.value})}
+              placeholder="Ej: Yoga, Taller de costura..."
+              style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1.5px solid #E8ECF0", fontSize:14, fontFamily:"inherit", boxSizing:"border-box", marginBottom:14 }}/>
+            <div style={{ fontSize:11, fontWeight:700, color:"#9E9E9E", marginBottom:6 }}>ESPACIO / LUGAR</div>
+            <select value={formCelda.espacio} onChange={e=>setFormCelda({...formCelda, espacio:e.target.value})}
+              style={{ width:"100%", padding:"10px 14px", borderRadius:10, border:"1.5px solid #E8ECF0", fontSize:14, fontFamily:"inherit", marginBottom:6 }}>
+              <option value="">Sin espacio asignado</option>
+              {espacios.map(e=><option key={e.id} value={e.nombre}>{e.nombre}</option>)}
+            </select>
+            <div style={{ fontSize:11, color:"#9E9E9E", marginBottom:16 }}>
+              💡 Dejá la actividad vacía para borrar esta celda
+            </div>
+            <div style={{ display:"flex", gap:10 }}>
+              <button onClick={()=>setCeldaEditando(null)} style={{ flex:1, padding:"11px 0", borderRadius:10, border:"1.5px solid #E8ECF0", background:"#fff", fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>Cancelar</button>
+              <button onClick={guardarCelda} style={{ flex:2, padding:"11px 0", borderRadius:10, border:"none", background:"linear-gradient(135deg,#2E7D32,#00796B)", color:"#fff", fontWeight:800, cursor:"pointer", fontFamily:"inherit" }}>Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Panel admin — horarios y espacios */}
+      {esAdmin && (
+        <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:16, marginBottom:20 }}>
+          {/* Horarios */}
+          <div style={{ background:"#fff", borderRadius:16, padding:18, boxShadow:"0 2px 10px rgba(0,0,0,0.06)" }}>
+            <div style={{ fontWeight:800, fontSize:14, color:"#0A1628", marginBottom:12 }}>⏰ Horarios</div>
+            <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+              <input value={nuevoHorario} onChange={e=>setNuevoHorario(e.target.value)}
+                placeholder="Ej: 08:00 - 09:00"
+                onKeyDown={e=>e.key==="Enter"&&agregarHorario()}
+                style={{ flex:1, padding:"9px 12px", borderRadius:9, border:"1.5px solid #E8ECF0", fontSize:13, fontFamily:"inherit" }}/>
+              <button onClick={agregarHorario} style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"linear-gradient(135deg,#2E7D32,#00796B)", color:"#fff", fontWeight:700, cursor:"pointer", fontFamily:"inherit", fontSize:13 }}>+ Agregar</button>
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {horarios.length===0 && <div style={{ fontSize:12, color:"#9E9E9E", textAlign:"center", padding:12 }}>Sin horarios aún</div>}
+              {horarios.map(h=>(
+                <div key={h.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 12px", background:"#F5F7FA", borderRadius:8 }}>
+                  <span style={{ fontSize:13, fontWeight:600 }}>🕐 {h.label}</span>
+                  <button onClick={()=>eliminarHorario(h.id)} style={{ background:"none", border:"none", color:"#C62828", cursor:"pointer", fontSize:14 }}>🗑️</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Espacios */}
+          <div style={{ background:"#fff", borderRadius:16, padding:18, boxShadow:"0 2px 10px rgba(0,0,0,0.06)" }}>
+            <div style={{ fontWeight:800, fontSize:14, color:"#0A1628", marginBottom:12 }}>📍 Espacios</div>
+            <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+              <input value={nuevoEspacio} onChange={e=>setNuevoEspacio(e.target.value)}
+                placeholder="Ej: Salón principal, Patio..."
+                onKeyDown={e=>e.key==="Enter"&&agregarEspacio()}
+                style={{ flex:1, padding:"9px 12px", borderRadius:9, border:"1.5px solid #E8ECF0", fontSize:13, fontFamily:"inherit" }}/>
+              <button onClick={agregarEspacio} style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"linear-gradient(135deg,#2E7D32,#00796B)", color:"#fff", fontWeight:700, cursor:"pointer", fontFamily:"inherit", fontSize:13 }}>+ Agregar</button>
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {espacios.length===0 && <div style={{ fontSize:12, color:"#9E9E9E", textAlign:"center", padding:12 }}>Sin espacios aún</div>}
+              {espacios.map(e=>(
+                <div key={e.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 12px", background:"#F5F7FA", borderRadius:8 }}>
+                  <span style={{ fontSize:13, fontWeight:600 }}>📍 {e.nombre}</span>
+                  <button onClick={()=>eliminarEspacio(e.id)} style={{ background:"none", border:"none", color:"#C62828", cursor:"pointer", fontSize:14 }}>🗑️</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grilla semanal */}
+      <div style={{ background:"#fff", borderRadius:18, padding:isMobile?10:20, boxShadow:"0 2px 10px rgba(0,0,0,0.06)", overflowX:"auto" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+          <div style={{ width:6, height:24, borderRadius:3, background:"linear-gradient(#2E7D32,#00796B)" }}/>
+          <h2 style={{ margin:0, fontSize:16, fontWeight:800, color:"#0A1628" }}>Cronograma semanal</h2>
+          {esAdmin && <span style={{ fontSize:12, color:"#9E9E9E" }}>— hacé click en una celda para editar</span>}
+        </div>
+
+        {horarios.length === 0
+          ? <div style={{ textAlign:"center", padding:40, color:"#9E9E9E", fontSize:13 }}>
+              {esAdmin ? "Agregá horarios arriba para comenzar" : "El cronograma aún no tiene horarios cargados"}
+            </div>
+          : (
+            <table style={{ width:"100%", borderCollapse:"collapse", minWidth:600 }}>
+              <thead>
+                <tr>
+                  <th style={{ padding:"10px 14px", background:"#0A1628", color:"#fff", fontSize:12, fontWeight:700, textAlign:"left", borderRadius:"8px 0 0 0", width:120 }}>Horario</th>
+                  {DIAS.map((dia, i) => (
+                    <th key={dia} style={{ padding:"10px 8px", background:"#0A1628", color:"#fff", fontSize:12, fontWeight:700, textAlign:"center", borderRadius: i===6?"0 8px 0 0":"0" }}>
+                      {isMobile ? dia.slice(0,3) : dia}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {horarios.map((h, hi) => (
+                  <tr key={h.id} style={{ background: hi%2===0 ? "#fff" : "#F9FAFB" }}>
+                    <td style={{ padding:"10px 14px", fontSize:12, fontWeight:700, color:"#374151", borderRight:"2px solid #E8ECF0", whiteSpace:"nowrap" }}>
+                      🕐 {h.label}
+                    </td>
+                    {DIAS.map(dia => {
+                      const key = `${h.id}_${dia}`
+                      const celda = celdas[key]
+                      return (
+                        <td key={dia} onClick={()=>abrirCelda(h.id, dia)}
+                          style={{ padding:"8px", border:"1px solid #F0F4F8", textAlign:"center", cursor:esAdmin?"pointer":"default", verticalAlign:"top",
+                            transition:"background 0.15s", minWidth:90,
+                          }}
+                          onMouseOver={e=>{ if(esAdmin) e.currentTarget.style.background="#E8F5E9" }}
+                          onMouseOut={e=>{ e.currentTarget.style.background="" }}
+                        >
+                          {celda ? (
+                            <div style={{ textAlign:"left" }}>
+                              <div style={{ fontSize:12, fontWeight:700, color:"#0A1628" }}>{celda.actividad}</div>
+                              {celda.espacio && <div style={{ fontSize:11, color:"#6B7280", marginTop:2 }}>📍 {celda.espacio}</div>}
+                            </div>
+                          ) : (
+                            esAdmin && <span style={{ fontSize:18, color:"#E8ECF0" }}>+</span>
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        }
+      </div>
+    </div>
+  )
+}
 // ── APP PRINCIPAL ─────────────────────────────────────────────────────────────
 function App() {
   const [usuario, setUsuario] = useState(null)
@@ -778,6 +1001,7 @@ const [entreCalles, setEntreCalles] = useState("")
     {id:"pagos",icon:"💰",label:"Pagos",soloAdmin:true},
     {id:"perfil",icon:"👤",label:"Mi perfil"},
     {id:"mis-pagos",icon:"💳",label:"Mis pagos"},
+    {id:"cronograma", icon:"🗓️", label:"Cronograma"},
     {id:"avisos",icon:"📢",label:"Avisos"},
     {id:"mensajes",icon:"✉️",label:"Mensajes"},
     {id:"admin",icon:"⚙️",label:"Admin",soloAdmin:true},
