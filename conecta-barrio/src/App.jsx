@@ -1200,9 +1200,9 @@ const [entreCalles, setEntreCalles] = useState("")
                           <span style={{ fontSize:11,color:"#9E9E9E" }}>{r.fecha}</span>
                         </div>
                         <div style={{ display:"flex",gap:8 }}>
-                          <button onClick={()=>toggle(r.id,r.estado)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"none",background:r.estado==="pendiente"?"linear-gradient(135deg,#2E7D32,#00796B)":"linear-gradient(135deg,#E65100,#F57C00)",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{r.estado==="pendiente"?"✅ Resolver":"↩ Reabrir"}</button>
+                          {esAdmin&&<button onClick={()=>toggle(r.id,r.estado)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"none",background:r.estado==="pendiente"?"linear-gradient(135deg,#2E7D32,#00796B)":"linear-gradient(135deg,#E65100,#F57C00)",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{r.estado==="pendiente"?"✅ Resolver":"↩ Reabrir"}</button>}
                           {r.posicion&&<button onClick={()=>{setSeccion("mapa");setTimeout(()=>{if(map)map.flyTo([r.posicion.lat,r.posicion.lng],17)},300)}} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"1.5px solid #E8ECF0",background:"#fff",color:"#1565C0",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>🗺️ Mapa</button>}
-                          <button onClick={()=>borrar(r.id)} style={{ padding:"7px 12px",borderRadius:8,border:"1.5px solid #FFCDD2",background:"#FFF5F5",color:"#C62828",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>🗑️</button>
+                          {esAdmin&&<button onClick={()=>borrar(r.id)} style={{ padding:"7px 12px",borderRadius:8,border:"1.5px solid #FFCDD2",background:"#FFF5F5",color:"#C62828",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>🗑️</button>}
                         </div>
                         <SeccionComentarios reclamoId={r.id} usuario={usuario}/>
                       </div>
@@ -1241,6 +1241,7 @@ const [entreCalles, setEntreCalles] = useState("")
           {seccion==="perfil"&&<SeccionPerfil usuario={usuario} setUsuario={setUsuario}/>}
           {seccion==="mis-pagos"&&<MisPagos userId={usuario.id} cuotaAlDia={usuario.cuota_al_dia}/>}
           {seccion==="pagos"&&esAdmin&&<SeccionPagos usuario={usuario}/>}
+          {seccion==="cronograma"&&<SeccionCronograma usuario={usuario} esAdmin={esAdmin}/>}
 
           {seccion==="admin"&&esAdmin&&(
             <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:22,boxShadow:"0 2px 10px rgba(0,0,0,0.06)" }}>
