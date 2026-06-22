@@ -1182,7 +1182,7 @@ const [entreCalles, setEntreCalles] = useState("")
                           {estadoBadge(r.estado)}
                         </div>
                         <p style={{ margin:"0 0 8px",fontSize:13,color:"#6B7280",lineHeight:1.5 }}>{r.descripcion}</p>
-                        <div style={{ display:"flex",flexWrap:"wrap",gap:6,marginBottom:10 }}>
+                        <div style={{ display:"flex",flexWrap:"wrap",alignItems:"center",gap:6,marginBottom:10 }}>
                           <span style={{ fontSize:11,fontWeight:700,color:"#1565C0",background:"#E3F2FD",padding:"3px 10px",borderRadius:20 }}>
                             🏷️ {
                               r.detalle_categoria==="madera"?"Poste de madera":
@@ -1200,10 +1200,8 @@ const [entreCalles, setEntreCalles] = useState("")
                               📍 Entre: {r.entre_calles}
                             </span>
                           )}
-                        </div>
-                        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:6 }}>
                           <span style={{ fontSize:11,fontWeight:700,color:prioColor(r.prioridad),background:prioColor(r.prioridad)+"15",padding:"3px 10px",borderRadius:20 }}>{prioIcon(r.prioridad)} {r.prioridad}</span>
-                          <span style={{ fontSize:11,color:"#9E9E9E" }}>{r.fecha}</span>
+                          <span style={{ fontSize:11,color:"#9E9E9E",marginLeft:"auto" }}>{r.fecha}</span>
                         </div>
                         <div style={{ display:"flex",gap:8 }}>
                           {esAdmin&&<button onClick={()=>toggle(r.id,r.estado)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:"none",background:r.estado==="pendiente"?"linear-gradient(135deg,#2E7D32,#00796B)":"linear-gradient(135deg,#E65100,#F57C00)",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{r.estado==="pendiente"?"✅ Resolver":"↩ Reabrir"}</button>}
