@@ -944,6 +944,7 @@ const [entreCalles, setEntreCalles] = useState("")
   const [reclamos, setReclamos] = useState([])
   const [sugerencias, setSugerencias] = useState([])
   const [descExpandidas, setDescExpandidas] = useState({})
+  const [descExpandidas, setDescExpandidas] = useState({})
   const isMobile = useIsMobile()
 
   useEffect(()=>{
@@ -976,6 +977,7 @@ const [entreCalles, setEntreCalles] = useState("")
   async function cerrarSesion() { await supabase.auth.signOut(); setUsuario(null) }
 
   function irA(id) { setSeccion(id); setMenuMobileOpen(false) }
+  function toggleDescripcion(id) { setDescExpandidas(prev => ({ ...prev, [id]: !prev[id] })) }
   function toggleDescripcion(id) { setDescExpandidas(prev => ({ ...prev, [id]: !prev[id] })) }
 
  async function agregar() {
@@ -1191,15 +1193,11 @@ const [entreCalles, setEntreCalles] = useState("")
                         )}
                         <div style={{ display:"flex",flexWrap:"wrap",alignItems:"center",gap:6,marginBottom:10 }}>
                           <span style={{ fontSize:11,fontWeight:700,color:"#1565C0",background:"#E3F2FD",padding:"3px 10px",borderRadius:20 }}>
-                            🏷️ Tipo: {
-                              r.detalle_categoria==="madera"?"Poste de madera":
-                              r.detalle_categoria==="hormigon"?"Poste de hormigón":
-                              r.detalle_categoria==="asfalto"?"Calle de asfalto":
-                              r.detalle_categoria==="tierra"?"Calle de tierra":
-                              r.detalle_categoria==="piedra"?"Calle de piedra":
-                              r.categoria==="luz"?"Iluminación":
-                              r.categoria==="calle"?"Estado de calles":
-                              r.categoria==="microbasural"?"Microbasural":"Otros"
+                           🏷️ {
+                              r.categoria==="luz" ? `Tipo de poste: ${r.detalle_categoria==="madera"?"Madera":r.detalle_categoria==="hormigon"?"Hormigón":"Sin especificar"}` :
+                              r.categoria==="calle" ? `Superficie: ${r.detalle_categoria==="asfalto"?"Asfalto":r.detalle_categoria==="tierra"?"Tierra":r.detalle_categoria==="piedra"?"Piedra":"Sin especificar"}` :
+                              r.categoria==="microbasural" ? "Categoría: Microbasural" :
+                              "Categoría: Otros"
                             }
                           </span>
                           {r.entre_calles&&(
