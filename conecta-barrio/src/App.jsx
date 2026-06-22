@@ -943,6 +943,7 @@ const [entreCalles, setEntreCalles] = useState("")
   const [menuMobileOpen, setMenuMobileOpen] = useState(false)
   const [reclamos, setReclamos] = useState([])
   const [sugerencias, setSugerencias] = useState([])
+  const [descExpandidas, setDescExpandidas] = useState({})
   const isMobile = useIsMobile()
 
   useEffect(()=>{
@@ -975,6 +976,7 @@ const [entreCalles, setEntreCalles] = useState("")
   async function cerrarSesion() { await supabase.auth.signOut(); setUsuario(null) }
 
   function irA(id) { setSeccion(id); setMenuMobileOpen(false) }
+  function toggleDescripcion(id) { setDescExpandidas(prev => ({ ...prev, [id]: !prev[id] })) }
 
  async function agregar() {
     if(!titulo||!ubicacion||!categoria){ alert("Completá título, ubicación y categoría"); return }
@@ -1181,10 +1183,15 @@ const [entreCalles, setEntreCalles] = useState("")
                           </div>
                           {estadoBadge(r.estado)}
                         </div>
-                        <p style={{ margin:"0 0 8px",fontSize:13,color:"#6B7280",lineHeight:1.5 }}>{r.descripcion}</p>
+                        <p style={{ margin:"0 0 4px",fontSize:13,color:"#6B7280",lineHeight:1.5,display:descExpandidas[r.id]?"block":"-webkit-box",WebkitLineClamp:descExpandidas[r.id]?"unset":2,WebkitBoxOrient:"vertical",overflow:descExpandidas[r.id]?"visible":"hidden" }}>{r.descripcion}</p>
+                        {r.descripcion&&r.descripcion.length>80&&(
+                          <button onClick={()=>toggleDescripcion(r.id)} style={{ background:"none",border:"none",padding:0,color:"#1565C0",fontSize:12,cursor:"pointer",fontFamily:"inherit",marginBottom:8 }}>
+                            {descExpandidas[r.id]?"Ver menos":"Ver más"}
+                          </button>
+                        )}
                         <div style={{ display:"flex",flexWrap:"wrap",alignItems:"center",gap:6,marginBottom:10 }}>
                           <span style={{ fontSize:11,fontWeight:700,color:"#1565C0",background:"#E3F2FD",padding:"3px 10px",borderRadius:20 }}>
-                            🏷️ {
+                            🏷️ Tipo: {
                               r.detalle_categoria==="madera"?"Poste de madera":
                               r.detalle_categoria==="hormigon"?"Poste de hormigón":
                               r.detalle_categoria==="asfalto"?"Calle de asfalto":
@@ -1200,7 +1207,7 @@ const [entreCalles, setEntreCalles] = useState("")
                               📍 Entre: {r.entre_calles}
                             </span>
                           )}
-                          <span style={{ fontSize:11,fontWeight:700,color:prioColor(r.prioridad),background:prioColor(r.prioridad)+"15",padding:"3px 10px",borderRadius:20 }}>{prioIcon(r.prioridad)} {r.prioridad}</span>
+                          <span style={{ fontSize:11,fontWeight:700,color:prioColor(r.prioridad),background:prioColor(r.prioridad)+"15",padding:"3px 10px",borderRadius:20 }}>{prioIcon(r.prioridad)} Prioridad: {r.prioridad}</span>
                           <span style={{ fontSize:11,color:"#9E9E9E",marginLeft:"auto" }}>{r.fecha}</span>
                         </div>
                         <div style={{ display:"flex",gap:8 }}>
