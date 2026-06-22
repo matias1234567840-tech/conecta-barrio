@@ -1237,6 +1237,7 @@ const [entreCalles, setEntreCalles] = useState("")
           )}
 
           {seccion==="socios"&&esAdmin&&<SeccionSocios usuario={usuario} esAdmin={esAdmin}/>}
+          {seccion==="cronograma"&&<SeccionCronograma usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="avisos"&&<SeccionAvisos usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="mensajes"&&<SeccionMensajes usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="perfil"&&<SeccionPerfil usuario={usuario} setUsuario={setUsuario}/>}
