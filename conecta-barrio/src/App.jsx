@@ -1136,13 +1136,11 @@ const [entreCalles, setEntreCalles] = useState("")
 <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} placeholder="Descripción del problema..." rows={3} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",boxSizing:"border-box",resize:"none",marginBottom:10,color:"#0A1628" }}/>
 <div style={{ marginBottom:10 }}>
   <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:6,letterSpacing:0.5 }}>PRIORIDAD</div>
-  <div style={{ display:"flex",gap:8 }}>
-    {["alta","media","baja"].map(p=>(
-      <button key={p} onClick={()=>setPrioridad(p)} style={{ flex:1,padding:"7px 0",borderRadius:8,border:`2px solid ${prioridad===p?prioColor(p):"#E8ECF0"}`,background:prioridad===p?prioColor(p)+"15":"#fff",color:prioridad===p?prioColor(p):"#9E9E9E",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",textTransform:"capitalize" }}>
-        {prioIcon(p)} {p.charAt(0).toUpperCase()+p.slice(1)}
-      </button>
-    ))}
-  </div>
+  <select value={prioridad} onChange={e=>setPrioridad(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",background:"#fff",color:"#0A1628" }}>
+    <option value="alta">🔴 Alta</option>
+    <option value="media">🟠 Media</option>
+    <option value="baja">🟢 Baja</option>
+  </select>
 </div>
 <label style={{ display:"flex",alignItems:"center",gap:10,padding:"9px 14px",borderRadius:10,border:"1.5px dashed #CBD5E1",cursor:"pointer",marginBottom:12,color:"#9E9E9E",fontSize:13 }}>
   📷 {imagen?"✅ Foto cargada":"Adjuntar foto (opcional)"}
@@ -1184,17 +1182,25 @@ const [entreCalles, setEntreCalles] = useState("")
                           {estadoBadge(r.estado)}
                         </div>
                         <p style={{ margin:"0 0 8px",fontSize:13,color:"#6B7280",lineHeight:1.5 }}>{r.descripcion}</p>
-                       <span style={{ fontWeight:700 }}>{
-    r.detalle_categoria==="madera"?"Poste de madera":
-    r.detalle_categoria==="hormigon"?"Poste de hormigón":
-    r.detalle_categoria==="asfalto"?"Calle de asfalto":
-    r.detalle_categoria==="tierra"?"Calle de tierra":
-    r.detalle_categoria==="piedra"?"Calle de piedra":
-    r.categoria==="luz"?"Iluminación":
-    r.categoria==="calle"?"Estado de calles":
-    r.categoria==="microbasural"?"Microbasural":"Otros"
-  }</span>
-  {r.entre_calles&&<span> — Entre: {r.entre_calles}</span>}
+                        <div style={{ display:"flex",flexWrap:"wrap",gap:6,marginBottom:10 }}>
+                          <span style={{ fontSize:11,fontWeight:700,color:"#1565C0",background:"#E3F2FD",padding:"3px 10px",borderRadius:20 }}>
+                            🏷️ {
+                              r.detalle_categoria==="madera"?"Poste de madera":
+                              r.detalle_categoria==="hormigon"?"Poste de hormigón":
+                              r.detalle_categoria==="asfalto"?"Calle de asfalto":
+                              r.detalle_categoria==="tierra"?"Calle de tierra":
+                              r.detalle_categoria==="piedra"?"Calle de piedra":
+                              r.categoria==="luz"?"Iluminación":
+                              r.categoria==="calle"?"Estado de calles":
+                              r.categoria==="microbasural"?"Microbasural":"Otros"
+                            }
+                          </span>
+                          {r.entre_calles&&(
+                            <span style={{ fontSize:11,fontWeight:700,color:"#6B7280",background:"#F5F7FA",padding:"3px 10px",borderRadius:20 }}>
+                              📍 Entre: {r.entre_calles}
+                            </span>
+                          )}
+                        </div>
                         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:6 }}>
                           <span style={{ fontSize:11,fontWeight:700,color:prioColor(r.prioridad),background:prioColor(r.prioridad)+"15",padding:"3px 10px",borderRadius:20 }}>{prioIcon(r.prioridad)} {r.prioridad}</span>
                           <span style={{ fontSize:11,color:"#9E9E9E" }}>{r.fecha}</span>
