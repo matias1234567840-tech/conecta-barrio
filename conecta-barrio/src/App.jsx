@@ -85,18 +85,17 @@ function PantallaLogin({ onLogin }) {
     setCargando(false)
   }
 
-  async function handleRegistro() {
+async function handleRegistro() {
     if (!nombre || !email || !password) return setError("Completá todos los campos")
     if (password.length < 6) return setError("La contraseña debe tener al menos 6 caracteres")
     setCargando(true); setError("")
-    const { count } = await supabase.from("profiles").select("*", { count:"exact", head:true })
-    const rol = count === 0 ? "admin" : "socio"
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({
+      email, password,
+      options: { data: { nombre } }
+    })
     if (error) { setError(error.message); setCargando(false); return }
     if (!data.user) { setError("Error al crear el usuario, intentá de nuevo"); setCargando(false); return }
-    const { error: errorPerfil } = await supabase.from("profiles").insert({ id: data.user.id, nombre, rol, cuota_al_dia: false, fecha_registro: hoy() })
-    if (errorPerfil) { setError("Error al guardar el perfil: " + errorPerfil.message); setCargando(false); return }
-    onLogin({ id: data.user.id, email, nombre, rol, cuota_al_dia: false })
+    onLogin({ id: data.user.id, email, nombre, rol: "socio", cuota_al_dia: false })
     setCargando(false)
   }
 
@@ -1237,7 +1236,6 @@ const [entreCalles, setEntreCalles] = useState("")
           )}
 
           {seccion==="socios"&&esAdmin&&<SeccionSocios usuario={usuario} esAdmin={esAdmin}/>}
-          {seccion==="cronograma"&&<SeccionCronograma usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="avisos"&&<SeccionAvisos usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="mensajes"&&<SeccionMensajes usuario={usuario} esAdmin={esAdmin}/>}
           {seccion==="perfil"&&<SeccionPerfil usuario={usuario} setUsuario={setUsuario}/>}
