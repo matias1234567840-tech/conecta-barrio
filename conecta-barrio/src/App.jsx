@@ -604,6 +604,7 @@ function SeccionPagos({ usuario }) {
   const [concepto, setConcepto] = useState("Cuota mensual")
   const [fecha, setFecha] = useState("")
   const [filtroBusqueda, setFiltroBusqueda] = useState("")
+  const [filtroSocio, setFiltroSocio] = useState("")
   const isMobile = useIsMobile()
 
   useEffect(()=>{ cargar(); cargarSocios() },[])
@@ -621,16 +622,48 @@ function SeccionPagos({ usuario }) {
   async function registrarPago() {
     if(!socioId||!monto||!fecha) return alert("Completá todos los campos")
     const socio = socios.find(s=>s.id===socioId)
-    await supabase.from("pagos").insert({ id:getId(), user_id:socioId, nombre_socio:socio?.nombre, monto:parseFloat(monto), concepto, fecha, registrado_por:usuario.nombre })
+    await supabase.from("pagos").insert({
+      id:getId(), user_id:socioId, nombre_socio:socio?.nombre,
+      monto:parseFloat(monto), concepto, fecha, registrado_por:usuario.nombre
+    })
     await supabase.from("profiles").update({cuota_al_dia:true}).eq("id",socioId)
     setSocioId(""); setMonto(""); setFecha("")
     cargar(); cargarSocios()
   }
 
-  const pagosFiltrados = pagos.filter(p=>p.nombre_socio?.toLowerCase().includes(filtroBusqueda.toLowerCase()))
+  async function borrarPago(id) {
+    if(!window.confirm("¿Eliminás este pago?")) return
+    await supabase.from("pagos").delete().eq("id", id)
+    cargar()
+  }
+
+  const pagosFiltrados = pagos.filter(p =>
+    p.nombre_socio?.toLowerCase().includes(filtroBusqueda.toLowerCase()) &&
+    (filtroSocio === "" || p.user_id === filtroSocio)
+  )
+
+  const totalRecaudado = pagosFiltrados.reduce((acc, p) => acc + (parseFloat(p.monto)||0), 0)
 
   return (
     <div>
+      {/* Stats */}
+      <div className="grid-stats" style={{ marginBottom:20 }}>
+        {[
+          { icon:"💰", value:`$${totalRecaudado.toLocaleString("es-AR")}`, label:"Total recaudado", color:"#2E7D32", bg:"#E8F5E9" },
+          { icon:"📄", value:pagosFiltrados.length, label:"Pagos registrados", color:"#1565C0", bg:"#E3F2FD" },
+          { icon:"👥", value:socios.filter(s=>s.cuota_al_dia).length, label:"Socios al día", color:"#00796B", bg:"#E0F2F1" },
+        ].map((s,i)=>(
+          <div key={i} style={{ background:"#fff", borderRadius:14, padding:"14px 16px", borderTop:`3px solid ${s.color}`, boxShadow:"0 2px 10px rgba(0,0,0,0.06)", display:"flex", alignItems:"center", gap:12 }}>
+            <div style={{ width:40,height:40,borderRadius:11,background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0 }}>{s.icon}</div>
+            <div>
+              <div style={{ fontSize:20,fontWeight:900,color:s.color,lineHeight:1 }}>{s.value}</div>
+              <div style={{ fontSize:11,color:"#9E9E9E",marginTop:3 }}>{s.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Formulario */}
       <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)",marginBottom:20 }}>
         <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
           <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
@@ -639,9 +672,9 @@ function SeccionPagos({ usuario }) {
         <div className={!isMobile?"grid-2":""} style={{ gap:12 }}>
           <div>
             <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>SOCIO</div>
-            <select value={socioId} onChange={e=>setSocioId(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12 }}>
+            <select value={socioId} onChange={e=>setSocioId(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,background:"#fff" }}>
               <option value="">Seleccioná un socio...</option>
-              {socios.map(s=><option key={s.id} value={s.id}>{s.nombre}</option>)}
+              {socios.map(s=><option key={s.id} value={s.id}>{s.nombre} {s.cuota_al_dia?"✅":""}</option>)}
             </select>
             <div style={{ fontSize:11,fontWeight:700,color:"#9E9E9E",marginBottom:5 }}>CONCEPTO</div>
             <input value={concepto} onChange={e=>setConcepto(e.target.value)} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:14,fontFamily:"inherit",marginBottom:12,boxSizing:"border-box" }}/>
@@ -655,46 +688,92 @@ function SeccionPagos({ usuario }) {
         </div>
         <button onClick={registrarPago} style={{ width:"100%",padding:"12px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#2E7D32,#00796B)",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>💰 Registrar pago</button>
       </div>
+
+      {/* Historial */}
       <div style={{ background:"#fff",borderRadius:18,padding:isMobile?14:24,boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
         <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10 }}>
           <div style={{ display:"flex",alignItems:"center",gap:10 }}>
             <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
             <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Historial de pagos</h2>
           </div>
-          <input value={filtroBusqueda} onChange={e=>setFiltroBusqueda(e.target.value)} placeholder="🔍 Buscar socio..." style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit" }}/>
+          <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+            <input value={filtroBusqueda} onChange={e=>setFiltroBusqueda(e.target.value)}
+              placeholder="🔍 Buscar por nombre..."
+              style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit" }}/>
+            <select value={filtroSocio} onChange={e=>setFiltroSocio(e.target.value)}
+              style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit",background:"#fff" }}>
+              <option value="">Todos los socios</option>
+              {socios.map(s=><option key={s.id} value={s.id}>{s.nombre}</option>)}
+            </select>
+          </div>
         </div>
+
+        {/* Desktop */}
         <div className="tabla-desktop">
           <table style={{ width:"100%",borderCollapse:"collapse" }}>
             <thead><tr style={{ background:"#F5F7FA" }}>
-              {["Socio","Concepto","Monto","Fecha","Registrado por"].map(h=><th key={h} style={{ textAlign:"left",padding:"10px 12px",fontSize:11,color:"#9E9E9E",fontWeight:700 }}>{h}</th>)}
+              {["Socio","Concepto","Monto","Fecha","Registrado por",""].map(h=>(
+                <th key={h} style={{ textAlign:"left",padding:"10px 12px",fontSize:11,color:"#9E9E9E",fontWeight:700 }}>{h}</th>
+              ))}
             </tr></thead>
             <tbody>
-              {pagosFiltrados.length===0&&<tr><td colSpan={5} style={{ textAlign:"center",padding:28,color:"#9E9E9E" }}>Sin pagos registrados</td></tr>}
+              {pagosFiltrados.length===0&&(
+                <tr><td colSpan={6} style={{ textAlign:"center",padding:28,color:"#9E9E9E" }}>Sin pagos registrados</td></tr>
+              )}
               {pagosFiltrados.map(p=>(
                 <tr key={p.id} style={{ borderBottom:"1px solid #F0F4F8" }}>
                   <td style={{ padding:"10px 12px",fontSize:13,fontWeight:600,color:"#0A1628" }}>{p.nombre_socio}</td>
                   <td style={{ padding:"10px 12px",fontSize:13,color:"#6B7280" }}>{p.concepto}</td>
-                  <td style={{ padding:"10px 12px",fontSize:13,fontWeight:700,color:"#2E7D32" }}>${p.monto}</td>
+                  <td style={{ padding:"10px 12px" }}>
+                    <span style={{ fontSize:13,fontWeight:800,color:"#2E7D32",background:"#E8F5E9",padding:"3px 10px",borderRadius:20 }}>
+                      ${parseFloat(p.monto).toLocaleString("es-AR")}
+                    </span>
+                  </td>
                   <td style={{ padding:"10px 12px",fontSize:12,color:"#9E9E9E" }}>{p.fecha}</td>
                   <td style={{ padding:"10px 12px",fontSize:12,color:"#9E9E9E" }}>{p.registrado_por}</td>
+                  <td style={{ padding:"10px 12px" }}>
+                    <button onClick={()=>borrarPago(p.id)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:"#FFEBEE",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>
+                      🗑️ Borrar
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        {/* Mobile */}
         <div className="cards-mobile">
-          {pagosFiltrados.length===0&&<div style={{ textAlign:"center",padding:28,color:"#9E9E9E",fontSize:13 }}>Sin pagos registrados</div>}
+          {pagosFiltrados.length===0&&(
+            <div style={{ textAlign:"center",padding:28,color:"#9E9E9E",fontSize:13 }}>Sin pagos registrados</div>
+          )}
           {pagosFiltrados.map(p=>(
             <div key={p.id} style={{ background:"#F5F7FA",borderRadius:12,padding:14,borderLeft:"4px solid #2E7D32" }}>
-              <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
-                <div style={{ fontWeight:700,fontSize:14,color:"#0A1628" }}>{p.nombre_socio}</div>
-                <div style={{ fontWeight:800,fontSize:14,color:"#2E7D32" }}>${p.monto}</div>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6 }}>
+                <div>
+                  <div style={{ fontWeight:700,fontSize:14,color:"#0A1628" }}>{p.nombre_socio}</div>
+                  <div style={{ fontSize:12,color:"#6B7280",marginTop:2 }}>{p.concepto}</div>
+                </div>
+                <span style={{ fontWeight:800,fontSize:14,color:"#2E7D32",background:"#E8F5E9",padding:"3px 10px",borderRadius:20,flexShrink:0 }}>
+                  ${parseFloat(p.monto).toLocaleString("es-AR")}
+                </span>
               </div>
-              <div style={{ fontSize:12,color:"#6B7280" }}>{p.concepto}</div>
-              <div style={{ fontSize:11,color:"#9E9E9E",marginTop:4 }}>{p.fecha} · {p.registrado_por}</div>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8 }}>
+                <div style={{ fontSize:11,color:"#9E9E9E" }}>{p.fecha} · {p.registrado_por}</div>
+                <button onClick={()=>borrarPago(p.id)} style={{ padding:"4px 10px",borderRadius:6,border:"none",background:"#FFEBEE",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>
+                  🗑️
+                </button>
+              </div>
             </div>
           ))}
         </div>
+
+        {pagosFiltrados.length > 0 && (
+          <div style={{ marginTop:16,padding:"12px 16px",background:"#F0FFF4",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+            <span style={{ fontSize:13,fontWeight:700,color:"#2E7D32" }}>Total mostrado</span>
+            <span style={{ fontSize:16,fontWeight:900,color:"#2E7D32" }}>${totalRecaudado.toLocaleString("es-AR")}</span>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -944,7 +1023,6 @@ const [entreCalles, setEntreCalles] = useState("")
   const [reclamos, setReclamos] = useState([])
   const [sugerencias, setSugerencias] = useState([])
   const [descExpandidas, setDescExpandidas] = useState({})
-  const [descExpandidas, setDescExpandidas] = useState({})
   const isMobile = useIsMobile()
 
   useEffect(()=>{
@@ -977,7 +1055,6 @@ const [entreCalles, setEntreCalles] = useState("")
   async function cerrarSesion() { await supabase.auth.signOut(); setUsuario(null) }
 
   function irA(id) { setSeccion(id); setMenuMobileOpen(false) }
-  function toggleDescripcion(id) { setDescExpandidas(prev => ({ ...prev, [id]: !prev[id] })) }
   function toggleDescripcion(id) { setDescExpandidas(prev => ({ ...prev, [id]: !prev[id] })) }
 
  async function agregar() {
