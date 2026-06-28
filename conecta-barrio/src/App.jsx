@@ -605,6 +605,8 @@ function SeccionPagos({ usuario }) {
   const [fecha, setFecha] = useState("")
   const [filtroBusqueda, setFiltroBusqueda] = useState("")
   const [filtroSocio, setFiltroSocio] = useState("")
+const [fechaDesde, setFechaDesde] = useState("")
+const [fechaHasta, setFechaHasta] = useState("")
   const isMobile = useIsMobile()
 
   useEffect(()=>{ cargar(); cargarSocios() },[])
@@ -637,10 +639,13 @@ function SeccionPagos({ usuario }) {
     cargar()
   }
 
-  const pagosFiltrados = pagos.filter(p =>
-    p.nombre_socio?.toLowerCase().includes(filtroBusqueda.toLowerCase()) &&
-    (filtroSocio === "" || p.user_id === filtroSocio)
-  )
+const pagosFiltrados = pagos.filter(p => {
+  const nombre = p.nombre_socio?.toLowerCase().includes(filtroBusqueda.toLowerCase())
+  const socio  = filtroSocio === "" || p.user_id === filtroSocio
+  const desde  = fechaDesde === "" || p.fecha >= fechaDesde
+  const hasta  = fechaHasta === "" || p.fecha <= fechaHasta
+  return nombre && socio && desde && hasta
+})
 
   const totalRecaudado = pagosFiltrados.reduce((acc, p) => acc + (parseFloat(p.monto)||0), 0)
 
@@ -696,16 +701,32 @@ function SeccionPagos({ usuario }) {
             <div style={{ width:6,height:24,borderRadius:3,background:"linear-gradient(#2E7D32,#00796B)" }}/>
             <h2 style={{ margin:0,fontSize:16,fontWeight:800,color:"#0A1628" }}>Historial de pagos</h2>
           </div>
-          <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
-            <input value={filtroBusqueda} onChange={e=>setFiltroBusqueda(e.target.value)}
-              placeholder="🔍 Buscar por nombre..."
-              style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit" }}/>
-            <select value={filtroSocio} onChange={e=>setFiltroSocio(e.target.value)}
-              style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit",background:"#fff" }}>
-              <option value="">Todos los socios</option>
-              {socios.map(s=><option key={s.id} value={s.id}>{s.nombre}</option>)}
-            </select>
-          </div>
+         <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+  <input value={filtroBusqueda} onChange={e=>setFiltroBusqueda(e.target.value)}
+    placeholder="🔍 Buscar por nombre..."
+    style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit" }}/>
+  <select value={filtroSocio} onChange={e=>setFiltroSocio(e.target.value)}
+    style={{ padding:"8px 14px",borderRadius:10,border:"1.5px solid #E8ECF0",fontSize:13,fontFamily:"inherit",background:"#fff" }}>
+    <option value="">Todos los socios</option>
+    {socios.map(s=><option key={s.id} value={s.id}>{s.nombre}</option>)}
+  </select>
+  <div style={{ display:"flex",alignItems:"center",gap:6,background:"#F5F7FA",borderRadius:10,padding:"6px 12px",border:"1.5px solid #E8ECF0" }}>
+    <span style={{ fontSize:12,color:"#9E9E9E",fontWeight:600 }}>Desde</span>
+    <input type="date" value={fechaDesde} onChange={e=>setFechaDesde(e.target.value)}
+      style={{ border:"none",background:"none",fontSize:13,fontFamily:"inherit",color:"#0A1628",cursor:"pointer" }}/>
+  </div>
+  <div style={{ display:"flex",alignItems:"center",gap:6,background:"#F5F7FA",borderRadius:10,padding:"6px 12px",border:"1.5px solid #E8ECF0" }}>
+    <span style={{ fontSize:12,color:"#9E9E9E",fontWeight:600 }}>Hasta</span>
+    <input type="date" value={fechaHasta} onChange={e=>setFechaHasta(e.target.value)}
+      style={{ border:"none",background:"none",fontSize:13,fontFamily:"inherit",color:"#0A1628",cursor:"pointer" }}/>
+  </div>
+  {(fechaDesde||fechaHasta||filtroSocio||filtroBusqueda) && (
+    <button onClick={()=>{ setFechaDesde(""); setFechaHasta(""); setFiltroSocio(""); setFiltroBusqueda("") }}
+      style={{ padding:"8px 14px",borderRadius:10,border:"none",background:"#FFEBEE",color:"#C62828",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit" }}>
+      ✕ Limpiar filtros
+    </button>
+  )}
+</div>
         </div>
 
         {/* Desktop */}
