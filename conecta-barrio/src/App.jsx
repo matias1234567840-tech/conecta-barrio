@@ -1055,6 +1055,18 @@ const [entreCalles, setEntreCalles] = useState("")
       setCargandoSesion(false)
     })
   },[])
+  useEffect(() => {
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === "PASSWORD_RECOVERY") {
+      const nuevaPassword = prompt("Ingresá tu nueva contraseña:")
+      if (nuevaPassword) {
+        const { error } = await supabase.auth.updateUser({ password: nuevaPassword })
+        if (error) alert("Error: " + error.message)
+        else alert("✅ Contraseña actualizada correctamente")
+      }
+    }
+  })
+}, [])
 
   useEffect(()=>{ if(usuario)cargarReclamos() },[usuario])
 
